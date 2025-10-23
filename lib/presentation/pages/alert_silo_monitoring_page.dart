@@ -91,6 +91,12 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
     }
   }
 
+  Future<void> _handlePageChange(int page) async {
+    if (page == _currentPage || _loading || _refreshing) return;
+    
+    await _fetchAlertSilos(page: page);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -232,6 +238,10 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
         Expanded(
           child: _alertSilos.isEmpty ? _buildNoAlertsState() : _buildAlertsList(),
         ),
+        
+        // Pagination Controls
+        if (_pagination != null && _pagination!.totalPages > 1)
+          _buildPaginationControls(),
       ],
     );
   }
@@ -642,5 +652,92 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
       // Fall back to false if parsing fails
     }
     return false;
+  }
+
+  Widget _buildPaginationControls() {
+    if (_pagination == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        children: [
+          // Page info
+          Text(
+            'Showing ${((_currentPage - 1) * _itemsPerPage) + 1} to ${_currentPage * _itemsPerPage} of ${_pagination!.totalItems} alerts',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          
+          // Pagination buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Previous button
+              ElevatedButton(
+                onPressed: _pagination!.hasPreviousPage && !_loading && !_refreshing
+                    ? () => _handlePageChange(_currentPage - 1)
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: Colors.grey.shade700,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.chevron_left, size: 16.sp),
+                    Text('Previous', style: TextStyle(fontSize: 12.sp)),
+                  ],
+                ),
+              ),
+              
+              SizedBox(width: 16.w),
+              
+              // Page numbers
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Text(
+                  'Page $_currentPage of ${_pagination!.totalPages}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+              ),
+              
+              SizedBox(width: 16.w),
+              
+              // Next button
+              ElevatedButton(
+                onPressed: _pagination!.hasNextPage && !_loading && !_refreshing
+                    ? () => _handlePageChange(_currentPage + 1)
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade500,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Next', style: TextStyle(fontSize: 12.sp)),
+                    Icon(Icons.chevron_right, size: 16.sp),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

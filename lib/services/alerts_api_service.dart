@@ -502,11 +502,21 @@ class AlertsApiService {
       PaginationInfo? paginationInfo;
       
       if (responseBody is List) {
-        // Direct array response
+        // Direct array response - create mock pagination based on response size
         apiData = responseBody
             .map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
             .toList();
-        paginationInfo = null;
+        
+        // Create mock pagination info based on response
+        final hasMoreData = apiData.length == limit;
+        paginationInfo = PaginationInfo(
+          currentPage: page,
+          totalPages: hasMoreData ? page + 1 : page, // Estimate
+          totalItems: hasMoreData ? (page * limit) + 1 : (page - 1) * limit + apiData.length,
+          itemsPerPage: limit,
+          hasPreviousPage: page > 1,
+          hasNextPage: hasMoreData,
+        );
       } else if (responseBody is Map<String, dynamic>) {
         // Wrapped response
         final wrappedResponse = BackendApiResponse.fromJson(responseBody);
