@@ -77,11 +77,17 @@ class AlertApiResponse {
       level7: json['level_7']?.toDouble(),
       color7: json['color_7']?.toString() ?? '#ffffff',
       siloColor: json['silo_color']?.toString() ?? '#ffffff',
-      timestamp: DateTime.parse(json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
+      timestamp: DateTime.parse(
+          json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
       alertType: _parseAlertType(json['alert_type']?.toString()),
-      affectedLevels: (json['affected_levels'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? 
-          (json['affected_level'] != null ? [json['affected_level'].toInt()] : []),
-      activeSince: DateTime.parse(json['active_since']?.toString() ?? DateTime.now().toIso8601String()),
+      affectedLevels: (json['affected_levels'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          (json['affected_level'] != null
+              ? [json['affected_level'].toInt()]
+              : []),
+      activeSince: DateTime.parse(
+          json['active_since']?.toString() ?? DateTime.now().toIso8601String()),
     );
   }
 
@@ -210,9 +216,10 @@ class BackendApiResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       data: (json['data'] as List<dynamic>?)
-          ?.map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      pagination: json['pagination'] != null 
+              ?.map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      pagination: json['pagination'] != null
           ? PaginationInfo.fromJson(json['pagination'] as Map<String, dynamic>)
           : null,
     );
@@ -249,7 +256,9 @@ class AlertsCache {
   /// Check if cache is still valid
   bool isCacheValid() {
     if (_lastFetch == null) return false;
-    return DateTime.now().millisecondsSinceEpoch - _lastFetch!.millisecondsSinceEpoch < _cacheDurationMs;
+    return DateTime.now().millisecondsSinceEpoch -
+            _lastFetch!.millisecondsSinceEpoch <
+        _cacheDurationMs;
   }
 
   /// Check if currently loading
@@ -288,18 +297,19 @@ class AlertsCache {
 class AlertsApiService {
   static const String baseUrl = 'http://192.168.1.65:3000';
   static const String alertsEndpoint = '/alerts/active';
-  
+
   static final AlertsCache _cache = AlertsCache();
 
   /// Calculate human-readable duration
   static String calculateDuration(DateTime activeSince) {
     final now = DateTime.now();
-    final diffMs = now.millisecondsSinceEpoch - activeSince.millisecondsSinceEpoch;
-    
+    final diffMs =
+        now.millisecondsSinceEpoch - activeSince.millisecondsSinceEpoch;
+
     final minutes = (diffMs / (1000 * 60)).floor();
     final hours = (minutes / 60).floor();
     final days = (hours / 24).floor();
-    
+
     if (days > 0) {
       return '${days}d ${hours % 24}h';
     } else if (hours > 0) {
@@ -339,51 +349,68 @@ class AlertsApiService {
   static ProcessedAlert processAlertResponse(AlertApiResponse apiData) {
     // Handle null values by converting them to 0
     final sensors = [
-      apiData.level0 ?? 0, apiData.level1 ?? 0, apiData.level2 ?? 0, apiData.level3 ?? 0,
-      apiData.level4 ?? 0, apiData.level5 ?? 0, apiData.level6 ?? 0, apiData.level7 ?? 0
+      apiData.level0 ?? 0,
+      apiData.level1 ?? 0,
+      apiData.level2 ?? 0,
+      apiData.level3 ?? 0,
+      apiData.level4 ?? 0,
+      apiData.level5 ?? 0,
+      apiData.level6 ?? 0,
+      apiData.level7 ?? 0
     ];
-    
+
     final sensorColors = [
-      apiData.color0, apiData.color1, apiData.color2, apiData.color3,
-      apiData.color4, apiData.color5, apiData.color6, apiData.color7
+      apiData.color0,
+      apiData.color1,
+      apiData.color2,
+      apiData.color3,
+      apiData.color4,
+      apiData.color5,
+      apiData.color6,
+      apiData.color7
     ];
-    
+
     // Filter out null/zero values when calculating max temperature
     final validTemperatures = sensors.where((temp) => temp > 0).toList();
-    final maxTemp = validTemperatures.isNotEmpty ? validTemperatures.reduce((a, b) => a > b ? a : b) : 0.0;
-    
+    final maxTemp = validTemperatures.isNotEmpty
+        ? validTemperatures.reduce((a, b) => a > b ? a : b)
+        : 0.0;
+
     // Create sensor readings
     final sensorReadings = <SensorReading>[];
     int alertCount = 0;
-    
+
     for (int i = 0; i < sensors.length; i++) {
       final value = sensors[i];
       final color = sensorColors[i];
       final status = colorToStatus(color);
-      
-      if (status == AlertStatus.red || status == AlertStatus.yellow) alertCount++;
-      
+
+      if (status == AlertStatus.red || status == AlertStatus.yellow)
+        alertCount++;
+
       sensorReadings.add(SensorReading(
         id: 'sensor-${i + 1}',
         value: value,
         status: status,
       ));
     }
-    
+
     final overallStatus = colorToStatus(apiData.siloColor);
     AlertPriority priority = AlertPriority.normal;
-    if (apiData.alertType == AlertType.critical || overallStatus == AlertStatus.red) {
+    if (apiData.alertType == AlertType.critical ||
+        overallStatus == AlertStatus.red) {
       priority = AlertPriority.critical;
-    } else if (apiData.alertType == AlertType.warning || 
-               apiData.alertType == AlertType.disconnect || 
-               overallStatus == AlertStatus.yellow || 
-               alertCount > 0) {
+    } else if (apiData.alertType == AlertType.warning ||
+        apiData.alertType == AlertType.disconnect ||
+        overallStatus == AlertStatus.yellow ||
+        alertCount > 0) {
       priority = AlertPriority.warning;
     }
-    
+
     // Create alert ID
-    final alertId = '${apiData.siloNumber}-${apiData.alertType.name}-${apiData.affectedLevels.join(',')}';
-    
+    final alertId =
+        '${apiData.siloNumber}-${apiData.alertType.name}-${apiData.affectedLevels.join(',')}';
+
     return ProcessedAlert(
       id: alertId,
       siloNumber: apiData.siloNumber,
@@ -407,19 +434,23 @@ class AlertsApiService {
   /// Consolidate duplicate alerts by merging alerts with same silo number and alert type
   static List<ProcessedAlert> consolidateAlerts(List<ProcessedAlert> alerts) {
     final alertMap = <String, ProcessedAlert>{};
-    
+
     for (final alert in alerts) {
       // Group by silo number and alert type only (not by affected levels)
       final key = '${alert.siloNumber}-${alert.alertType.name}';
-      
+
       if (alertMap.containsKey(key)) {
         final existingAlert = alertMap[key]!;
-        
+
         // Merge affected levels from both alerts (remove duplicates)
-        final mergedAffectedLevels = <int>{...existingAlert.affectedLevels, ...alert.affectedLevels}.toList()..sort();
-        
+        final mergedAffectedLevels = <int>{
+          ...existingAlert.affectedLevels,
+          ...alert.affectedLevels
+        }.toList()
+          ..sort();
+
         // Keep the alert with the most recent timestamp for sensor data, but merge affected levels
-        final mergedAlert = alert.timestamp.isAfter(existingAlert.timestamp) 
+        final mergedAlert = alert.timestamp.isAfter(existingAlert.timestamp)
             ? alert.copyWith(
                 affectedLevels: mergedAffectedLevels,
                 id: '${alert.siloNumber}-${alert.alertType.name}-${mergedAffectedLevels.join(',')}',
@@ -428,13 +459,13 @@ class AlertsApiService {
                 affectedLevels: mergedAffectedLevels,
                 id: '${existingAlert.siloNumber}-${existingAlert.alertType.name}-${mergedAffectedLevels.join(',')}',
               );
-        
+
         alertMap[key] = mergedAlert;
       } else {
         alertMap[key] = alert;
       }
     }
-    
+
     return alertMap.values.toList();
   }
 
@@ -444,7 +475,8 @@ class AlertsApiService {
     int page = 1,
     int limit = 20,
   }) async {
-    print('🚨 [ALERTS API] Fetching active alerts (page: $page, limit: $limit, forceRefresh: $forceRefresh)');
+    print(
+        '🚨 [ALERTS API] Fetching active alerts (page: $page, limit: $limit, forceRefresh: $forceRefresh)');
 
     // Don't use cache for pagination - always fetch fresh data for different pages
     // Only use cache if it's the same page and not forcing refresh
@@ -475,7 +507,8 @@ class AlertsApiService {
 
     try {
       final url = '$baseUrl$alertsEndpoint';
-      print('🚨 [ALERTS API] Fetching active alerts from: $url (page: $page, limit: $limit)');
+      print(
+          '🚨 [ALERTS API] Fetching active alerts from: $url (page: $page, limit: $limit)');
 
       // Build URL with pagination parameters
       final uri = Uri.parse(url).replace(queryParameters: {
@@ -492,27 +525,30 @@ class AlertsApiService {
       ).timeout(const Duration(minutes: 10)); // 10 minute timeout
 
       if (response.statusCode != 200) {
-        throw Exception('Alerts API request failed: ${response.statusCode} ${response.reasonPhrase}');
+        throw Exception(
+            'Alerts API request failed: ${response.statusCode} ${response.reasonPhrase}');
       }
 
       final responseBody = json.decode(response.body);
-      
+
       // Handle direct array response (no wrapper)
       List<AlertApiResponse> apiData;
       PaginationInfo? paginationInfo;
-      
+
       if (responseBody is List) {
         // Direct array response - create mock pagination based on response size
         apiData = responseBody
             .map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
             .toList();
-        
+
         // Create mock pagination info based on response
         final hasMoreData = apiData.length == limit;
         paginationInfo = PaginationInfo(
           currentPage: page,
           totalPages: hasMoreData ? page + 1 : page, // Estimate
-          totalItems: hasMoreData ? (page * limit) + 1 : (page - 1) * limit + apiData.length,
+          totalItems: hasMoreData
+              ? (page * limit) + 1
+              : (page - 1) * limit + apiData.length,
           itemsPerPage: limit,
           hasPreviousPage: page > 1,
           hasNextPage: hasMoreData,
@@ -525,16 +561,19 @@ class AlertsApiService {
       } else {
         throw Exception('Unexpected response format');
       }
-      
-      print('🚨 [ALERTS API] Received ${apiData.length} active alerts (page $page/${paginationInfo?.totalPages ?? 1})');
+
+      print(
+          '🚨 [ALERTS API] Received ${apiData.length} active alerts (page $page/${paginationInfo?.totalPages ?? 1})');
       print('🚨 [ALERTS API] Response body type: ${responseBody.runtimeType}');
-      print('🚨 [ALERTS API] Raw response: ${response.body.substring(0, 200)}...');
+      print(
+          '🚨 [ALERTS API] Raw response: ${response.body.substring(0, 200)}...');
       if (paginationInfo != null) {
-        print('🚨 [ALERTS API] Pagination info: ${paginationInfo.totalItems} total items, ${paginationInfo.totalPages} total pages');
+        print(
+            '🚨 [ALERTS API] Pagination info: ${paginationInfo.totalItems} total items, ${paginationInfo.totalPages} total pages');
       } else {
         print('🚨 [ALERTS API] No pagination info - using mock pagination');
       }
-      
+
       if (apiData.isEmpty) {
         print('🚨 [ALERTS API] No active alerts found');
         _cache.setAlerts([]);
@@ -548,10 +587,10 @@ class AlertsApiService {
 
       // Process all alerts and consolidate duplicates
       final processedAlerts = apiData.map(processAlertResponse).toList();
-      
+
       // Consolidate duplicate alerts
       final consolidatedAlerts = consolidateAlerts(processedAlerts);
-      
+
       // Sort alerts by severity and then by active time (most recent first)
       consolidatedAlerts.sort((a, b) {
         // Priority order: critical > warning > disconnect
@@ -560,37 +599,40 @@ class AlertsApiService {
           AlertType.warning: 2,
           AlertType.disconnect: 1,
         };
-        final severityDiff = (severityOrder[b.alertType] ?? 0) - (severityOrder[a.alertType] ?? 0);
-        
+        final severityDiff = (severityOrder[b.alertType] ?? 0) -
+            (severityOrder[a.alertType] ?? 0);
+
         if (severityDiff != 0) {
           return severityDiff;
         }
-        
+
         // If same severity, sort by active time (most recent first)
         return b.activeSince.compareTo(a.activeSince);
       });
-      
+
       // Filter out normal priority alerts (only show warnings and critical)
-      final filtered = consolidatedAlerts.where((alert) => alert.priority != AlertPriority.normal).toList();
-      
+      final filtered = consolidatedAlerts
+          .where((alert) => alert.priority != AlertPriority.normal)
+          .toList();
+
       // Cache the processed data
       _cache.setAlerts(filtered);
-      
-      print('🚨 [ALERTS API] Successfully processed ${apiData.length} raw alerts, consolidated to ${consolidatedAlerts.length} unique alerts, filtered to ${filtered.length} alerts');
+
+      print(
+          '🚨 [ALERTS API] Successfully processed ${apiData.length} raw alerts, consolidated to ${consolidatedAlerts.length} unique alerts, filtered to ${filtered.length} alerts');
       return FetchAlertsResult(
         alerts: filtered,
         pagination: paginationInfo,
         isLoading: false,
         error: null,
       );
-
     } catch (error) {
       final errorMessage = error.toString();
       print('🚨 [ALERTS API] Failed to fetch active alerts: $errorMessage');
-      
+
       _cache.setLastError(errorMessage);
       _cache.setLoading(false);
-      
+
       return FetchAlertsResult(
         alerts: _cache.getAlerts(), // Return cached data on error
         pagination: null,
@@ -610,7 +652,7 @@ class AlertsApiService {
   static String formatAlertTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {

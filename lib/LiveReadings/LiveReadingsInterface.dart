@@ -63,19 +63,38 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     }
   }
 
+  Future<void> _loadSiloDataAndUpdateColor(int siloNumber) async {
+    try {
+      print('🎨 [LIVE READINGS] Fetching API data for color update during auto test - silo $siloNumber...');
+      final data = await ApiService.getSiloSensorData(siloNumber);
+      if (data != null && mounted) {
+        print('✅ [LIVE READINGS] Updating color for silo $siloNumber: ${data.siloColor} (auto test continues)');
+        setState(() {
+          _siloDataCache[siloNumber] = data;
+          // Force UI update to show new colors immediately
+        });
+      } else {
+        print('❌ [LIVE READINGS] No data received for silo $siloNumber color update');
+      }
+    } catch (e) {
+      print('❌ [LIVE READINGS] Error loading silo $siloNumber data for color update: $e');
+    }
+  }
+
   Color getSiloColor(int num) {
     // During auto test, check silo state
     if (_autoTestController.isRunning) {
       if (_autoTestController.isSiloScanning(num)) {
         // Currently scanning silo - use blue color
         return Colors.blue;
-      } else if (_autoTestController.isSiloCompleted(num)) {
-        // Completed silo - use API color if available
+      } else {
+        // For any silo during auto test, check if we have fresh API data from manual clicks
         final cachedData = _siloDataCache[num];
         if (cachedData != null) {
           try {
             final colorHex = cachedData.siloColor;
             if (colorHex.isNotEmpty && colorHex != ApiService.wheatColor) {
+              print('🎨 [LIVE READINGS] Using fresh API color during auto test for silo $num: $colorHex');
               return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
             }
           } catch (e) {
@@ -153,14 +172,14 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     // Show silo details popup (always show, even during auto test)
     _showSiloDetailsPopup(siloNumber);
     
-    // Only start manual scanning if auto test is NOT running
+    // Always load fresh data and update colors, but handle scanning differently
     if (!_autoTestController.isRunning) {
       print('📱 [LIVE READINGS] Manual click on silo $siloNumber - starting scan');
       _startSiloScan(siloNumber);
     } else {
-      print('🔄 [LIVE READINGS] Auto test is running - showing popup only for silo $siloNumber');
-      // Just load data for the popup, don't interfere with auto test
-      _loadSiloData(siloNumber);
+      print('🔄 [LIVE READINGS] Auto test is running - updating colors for silo $siloNumber');
+      // Load fresh data and update colors without interfering with auto test
+      _loadSiloDataAndUpdateColor(siloNumber);
     }
     
     // Handle test mode
