@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // Use local backend server (LAN-based system)
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'http://192.168.1.65:3000';
   
   // Wheat color for unscanned silos (matching React implementation)
   static const String wheatColor = '#93856b';

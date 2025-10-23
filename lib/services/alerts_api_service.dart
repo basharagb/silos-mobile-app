@@ -286,7 +286,7 @@ class AlertsCache {
 
 /// Alerts API Service
 class AlertsApiService {
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'http://192.168.1.65:3000';
   static const String alertsEndpoint = '/alerts/active';
   
   static final AlertsCache _cache = AlertsCache();
@@ -442,7 +442,7 @@ class AlertsApiService {
   static Future<FetchAlertsResult> fetchActiveAlerts({
     bool forceRefresh = false,
     int page = 1,
-    int limit = 500,
+    int limit = 20,
   }) async {
     print('🚨 [ALERTS API] Fetching active alerts (page: $page, limit: $limit, forceRefresh: $forceRefresh)');
 

@@ -18,7 +18,7 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
   int _elapsedTime = 0;
   int _currentPage = 1;
   PaginationInfo? _pagination;
-  static const int _itemsPerPage = 500; // Increased to get all alerts
+  static const int _itemsPerPage = 20; // Fixed at 20 items per page (matching React app)
 
   @override
   void initState() {
@@ -788,73 +788,114 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
           ),
           SizedBox(height: 12.h),
           
-          // Pagination buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // Pagination buttons (matching React app style)
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8.w,
             children: [
               // Previous button
-              ElevatedButton(
-                onPressed: _pagination!.hasPreviousPage && !_loading && !_refreshing
-                    ? () => _handlePageChange(_currentPage - 1)
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.grey.shade700,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.chevron_left, size: 16.sp),
-                    Text('Previous', style: TextStyle(fontSize: 12.sp)),
-                  ],
-                ),
+              _buildPaginationButton(
+                'Previous',
+                _pagination!.hasPreviousPage ? () => _handlePageChange(_currentPage - 1) : null,
+                isActive: false,
+                icon: Icons.chevron_left,
               ),
               
-              SizedBox(width: 16.w),
-              
-              // Page numbers
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Text(
-                  'Page $_currentPage of ${_pagination!.totalPages}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-              ),
-              
-              SizedBox(width: 16.w),
+              // Page numbers (show 5 pages max)
+              ..._buildPageNumbers(),
               
               // Next button
-              ElevatedButton(
-                onPressed: _pagination!.hasNextPage && !_loading && !_refreshing
-                    ? () => _handlePageChange(_currentPage + 1)
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade500,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Next', style: TextStyle(fontSize: 12.sp)),
-                    Icon(Icons.chevron_right, size: 16.sp),
-                  ],
-                ),
+              _buildPaginationButton(
+                'Next',
+                _pagination!.hasNextPage ? () => _handlePageChange(_currentPage + 1) : null,
+                isActive: false,
+                icon: Icons.chevron_right,
+                iconAfter: true,
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPaginationButton(
+    String text,
+    VoidCallback? onPressed, {
+    bool isActive = false,
+    IconData? icon,
+    bool iconAfter = false,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isActive ? Colors.blue.shade500 : Colors.grey.shade200,
+        foregroundColor: isActive ? Colors.white : Colors.grey.shade700,
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        minimumSize: Size(40.w, 32.h),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null && !iconAfter) Icon(icon, size: 14.sp),
+          if (icon != null && !iconAfter) SizedBox(width: 4.w),
+          Text(text, style: TextStyle(fontSize: 11.sp)),
+          if (icon != null && iconAfter) SizedBox(width: 4.w),
+          if (icon != null && iconAfter) Icon(icon, size: 14.sp),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPageNumbers() {
+    if (_pagination == null) return [];
+    
+    final List<Widget> pages = [];
+    final totalPages = _pagination!.totalPages;
+    final current = _currentPage;
+    
+    // Show first page if current page is far from start
+    if (current > 3) {
+      pages.add(_buildPaginationButton(
+        '1',
+        () => _handlePageChange(1),
+        isActive: current == 1,
+      ));
+      if (current > 4) {
+        pages.add(Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+          child: Text('...', style: TextStyle(fontSize: 11.sp)),
+        ));
+      }
+    }
+    
+    // Show pages around current page
+    final start = (current - 2).clamp(1, totalPages);
+    final end = (current + 2).clamp(1, totalPages);
+    
+    for (int i = start; i <= end; i++) {
+      pages.add(_buildPaginationButton(
+        i.toString(),
+        () => _handlePageChange(i),
+        isActive: current == i,
+      ));
+    }
+    
+    // Show last page if current page is far from end
+    if (current < totalPages - 2) {
+      if (current < totalPages - 3) {
+        pages.add(Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+          child: Text('...', style: TextStyle(fontSize: 11.sp)),
+        ));
+      }
+      pages.add(_buildPaginationButton(
+        totalPages.toString(),
+        () => _handlePageChange(totalPages),
+        isActive: current == totalPages,
+      ));
+    }
+    
+    return pages;
   }
 }
