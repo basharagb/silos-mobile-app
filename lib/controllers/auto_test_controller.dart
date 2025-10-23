@@ -523,6 +523,28 @@ class AutoTestController extends ChangeNotifier {
     return _disconnectedSilos.contains(siloNumber);
   }
 
+  // Get total number of groups
+  int get totalGroups => 10;
+
+  // Get max retries
+  int get maxRetries => _maxRetries;
+
+  // Get silo progress (0.0 to 1.0)
+  double getSiloProgress(int siloNumber) {
+    if (_currentSilo == siloNumber && _isRunning) {
+      return _progress / 100.0;
+    }
+    return 0.0;
+  }
+
+  // Navigate to specific group (for pagination)
+  void navigateToGroup(int groupIndex) {
+    if (!_isRunning && groupIndex >= 0 && groupIndex < totalGroups) {
+      _currentGroupIndex = groupIndex;
+      notifyListeners();
+    }
+  }
+
   // Set silo as scanning (for manual scan simulation only)
   void setSiloScanning(int siloNumber) {
     // Only allow manual scanning if auto test is not already running

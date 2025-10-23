@@ -112,8 +112,10 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             return Colors.red; // Critical
           }
         }
-      } else if (_autoTestController.isSiloDisconnected(num)) {
-        // Disconnected silo
+      }
+      
+      // Check if silo is disconnected
+      if (_autoTestController.isSiloDisconnected(num)) {
         return Colors.red;
       }
       

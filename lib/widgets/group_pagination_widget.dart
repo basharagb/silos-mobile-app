@@ -1,6 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+class GroupProgressBar extends StatelessWidget {
+  final int currentGroup;
+  final int totalGroups;
+  final double overallProgress;
+  final bool isRetryPhase;
+
+  const GroupProgressBar({
+    super.key,
+    required this.currentGroup,
+    required this.totalGroups,
+    required this.overallProgress,
+    this.isRetryPhase = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isRetryPhase ? 'Retry Phase' : 'Auto Test Progress',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isRetryPhase ? Colors.orange : Colors.blue,
+                ),
+              ),
+              Text(
+                'Group ${currentGroup + 1}/$totalGroups',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          LinearProgressIndicator(
+            value: overallProgress / 100,
+            backgroundColor: Colors.grey.shade300,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              isRetryPhase ? Colors.orange : Colors.blue,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            '${overallProgress.toStringAsFixed(1)}%',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class GroupPaginationWidget extends StatelessWidget {
   final int currentGroup;
   final int totalGroups;
