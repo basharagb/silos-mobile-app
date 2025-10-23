@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../LiveReadings/LiveReadingsInterface.dart';
 import '../../core/theme/app_colors.dart';
 import '../blocs/auth/auth_bloc.dart';
+import '../pages/login_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -54,7 +55,16 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated || state is AuthError) {
+          // Navigate back to login when logged out
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -127,10 +137,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 color: Colors.white,
                 onSelected: (value) {
                   if (value == 'logout') {
-                    setState(() {
-                      context.read<AuthBloc>().add(AuthLogoutRequested());
-                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-                    });
+                    context.read<AuthBloc>().add(AuthLogoutRequested());
                   }
                 },
                 itemBuilder: (BuildContext context) => [
@@ -209,6 +216,6 @@ class _MainNavigationState extends State<MainNavigation> {
           items: _bottomNavItems,
         ),
       ),
-    );
+    ));
   }
 }

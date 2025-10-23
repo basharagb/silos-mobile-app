@@ -5,6 +5,7 @@ import '../widgets/weather_station_widget.dart';
 import '../widgets/animated_sensor_readings.dart';
 import '../widgets/animated_grain_level.dart';
 import '../widgets/silo_progress_indicator.dart';
+import '../widgets/silo_details_popup.dart';
 import '../widgets/group_pagination_widget.dart';
 import '../controllers/test_controller.dart';
 import '../controllers/auto_test_controller.dart';
@@ -149,10 +150,24 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       _loadSiloData(siloNumber);
     }
     
+    // Show silo details popup
+    _showSiloDetailsPopup(siloNumber);
+    
     // Handle test mode
     if (_testController.currentMode == TestMode.manual && !_testController.isRunning) {
       _testController.startManualTest(siloNumber);
     }
+  }
+
+  void _showSiloDetailsPopup(int siloNumber) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => SiloDetailsPopup(
+        siloNumber: siloNumber,
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    );
   }
   
   Widget _buildCurrentSiloGroup() {

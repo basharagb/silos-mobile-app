@@ -168,10 +168,14 @@ class _SiloProgressIndicatorState extends State<SiloProgressIndicator>
     
     switch (widget.state) {
       case SiloProgressState.completed:
-        icon = Icon(
-          Icons.check_circle,
-          color: Colors.white,
-          size: 16.sp,
+        // Show silo number for completed silos (not check icon)
+        icon = Text(
+          widget.siloNumber.toString(),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12.sp,
+            color: Colors.white,
+          ),
         );
         break;
       case SiloProgressState.disconnected:
