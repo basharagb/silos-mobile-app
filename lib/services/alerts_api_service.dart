@@ -528,8 +528,11 @@ class AlertsApiService {
       
       print('🚨 [ALERTS API] Received ${apiData.length} active alerts (page $page/${paginationInfo?.totalPages ?? 1})');
       print('🚨 [ALERTS API] Response body type: ${responseBody.runtimeType}');
+      print('🚨 [ALERTS API] Raw response: ${response.body.substring(0, 200)}...');
       if (paginationInfo != null) {
         print('🚨 [ALERTS API] Pagination info: ${paginationInfo.totalItems} total items, ${paginationInfo.totalPages} total pages');
+      } else {
+        print('🚨 [ALERTS API] No pagination info - using mock pagination');
       }
       
       if (apiData.isEmpty) {
