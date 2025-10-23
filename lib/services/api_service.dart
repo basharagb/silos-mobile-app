@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // Use the same API base URL as React app
-  static const String baseUrl = 'http://idealchiprnd.pythonanywhere.com';
+  // Use local backend server (LAN-based system)
+  static const String baseUrl = 'http://localhost:3000';
   
   // Wheat color for unscanned silos (matching React implementation)
   static const String wheatColor = '#93856b';

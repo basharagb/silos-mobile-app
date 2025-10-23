@@ -79,9 +79,8 @@ class AlertApiResponse {
       siloColor: json['silo_color']?.toString() ?? '#ffffff',
       timestamp: DateTime.parse(json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
       alertType: _parseAlertType(json['alert_type']?.toString()),
-      affectedLevels: json['affected_level'] != null 
-          ? [json['affected_level'].toInt()]
-          : (json['affected_levels'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? [],
+      affectedLevels: (json['affected_levels'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? 
+          (json['affected_level'] != null ? [json['affected_level'].toInt()] : []),
       activeSince: DateTime.parse(json['active_since']?.toString() ?? DateTime.now().toIso8601String()),
     );
   }
@@ -287,7 +286,7 @@ class AlertsCache {
 
 /// Alerts API Service
 class AlertsApiService {
-  static const String baseUrl = 'http://idealchiprnd.pythonanywhere.com';
+  static const String baseUrl = 'http://localhost:3000';
   static const String alertsEndpoint = '/alerts/active';
   
   static final AlertsCache _cache = AlertsCache();
