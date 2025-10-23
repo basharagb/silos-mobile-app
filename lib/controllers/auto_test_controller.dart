@@ -498,8 +498,6 @@ class AutoTestController extends ChangeNotifier {
   double getSiloProgress(int siloNumber) {
     if (_currentSilo != siloNumber || !_isRunning) return 0.0;
     
-    // Calculate progress based on elapsed time
-    final duration = _isRetryPhase ? _retryTestDuration : _siloTestDuration;
     // This is a simplified calculation - in real implementation, 
     // you'd track the actual elapsed time for the current silo
     return 0.5; // Placeholder - implement actual progress calculation
@@ -523,27 +521,6 @@ class AutoTestController extends ChangeNotifier {
     return _disconnectedSilos.contains(siloNumber);
   }
 
-  // Get total number of groups
-  int get totalGroups => 10;
-
-  // Get max retries
-  int get maxRetries => _maxRetries;
-
-  // Get silo progress (0.0 to 1.0)
-  double getSiloProgress(int siloNumber) {
-    if (_currentSilo == siloNumber && _isRunning) {
-      return _progress / 100.0;
-    }
-    return 0.0;
-  }
-
-  // Navigate to specific group (for pagination)
-  void navigateToGroup(int groupIndex) {
-    if (!_isRunning && groupIndex >= 0 && groupIndex < totalGroups) {
-      _currentGroupIndex = groupIndex;
-      notifyListeners();
-    }
-  }
 
   // Set silo as scanning (for manual scan simulation only)
   void setSiloScanning(int siloNumber) {
