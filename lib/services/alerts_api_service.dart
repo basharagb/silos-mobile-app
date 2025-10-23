@@ -79,7 +79,9 @@ class AlertApiResponse {
       siloColor: json['silo_color']?.toString() ?? '#ffffff',
       timestamp: DateTime.parse(json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
       alertType: _parseAlertType(json['alert_type']?.toString()),
-      affectedLevels: (json['affected_levels'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? [],
+      affectedLevels: json['affected_level'] != null 
+          ? [json['affected_level'].toInt()]
+          : (json['affected_levels'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? [],
       activeSince: DateTime.parse(json['active_since']?.toString() ?? DateTime.now().toIso8601String()),
     );
   }
@@ -493,12 +495,26 @@ class AlertsApiService {
         throw Exception('Alerts API request failed: ${response.statusCode} ${response.reasonPhrase}');
       }
 
-      final responseData = BackendApiResponse.fromJson(
-        json.decode(response.body) as Map<String, dynamic>
-      );
+      final responseBody = json.decode(response.body);
       
-      final apiData = responseData.data;
-      final paginationInfo = responseData.pagination;
+      // Handle direct array response (no wrapper)
+      List<AlertApiResponse> apiData;
+      PaginationInfo? paginationInfo;
+      
+      if (responseBody is List) {
+        // Direct array response
+        apiData = responseBody
+            .map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
+            .toList();
+        paginationInfo = null;
+      } else if (responseBody is Map<String, dynamic>) {
+        // Wrapped response
+        final wrappedResponse = BackendApiResponse.fromJson(responseBody);
+        apiData = wrappedResponse.data;
+        paginationInfo = wrappedResponse.pagination;
+      } else {
+        throw Exception('Unexpected response format');
+      }
       
       print('🚨 [ALERTS API] Received ${apiData.length} active alerts (page $page/${paginationInfo?.totalPages ?? 1})');
       
