@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../blocs/auth/auth_bloc.dart';
 import 'login_page.dart';
@@ -36,7 +37,7 @@ class _SplashPageState extends State<SplashPage>
   void _initAnimations() {
     // Logo animations
     _logoController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 4000),
       vsync: this,
     );
 
@@ -98,15 +99,15 @@ class _SplashPageState extends State<SplashPage>
     _logoController.forward();
     
     // Start text animation after 500ms
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 1500));
     _textController.forward();
     
     // Start progress animation after 1000ms
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 1500));
     _progressController.forward();
     
     // Check auth status after 3 seconds
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 4000));
     _checkAuthStatus();
   }
 
@@ -191,9 +192,9 @@ class _SplashPageState extends State<SplashPage>
                                   ],
                                 ),
                                 child: Icon(
-                                  Icons.agriculture,
+                                  FontAwesomeIcons.wheatAwn, // 🌾 رمز القمح
                                   color: Colors.white,
-                                  size: 80.sp,
+                                  size: 90.sp,
                                 ),
                               ),
                             ),
@@ -370,7 +371,7 @@ class _SplashPageState extends State<SplashPage>
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 800),
+        transitionDuration: const Duration(milliseconds: 1800),
       ),
     );
   }
