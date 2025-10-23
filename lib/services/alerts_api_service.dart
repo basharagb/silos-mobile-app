@@ -183,25 +183,31 @@ class PaginationInfo {
       currentPage: json['current_page']?.toInt() ?? 1,
       totalPages: json['total_pages']?.toInt() ?? 1,
       totalItems: json['total_items']?.toInt() ?? 0,
-      itemsPerPage: json['items_per_page']?.toInt() ?? 20,
+      itemsPerPage: json['per_page']?.toInt() ?? 20,
       hasPreviousPage: json['has_previous_page'] ?? false,
       hasNextPage: json['has_next_page'] ?? false,
     );
   }
 }
 
-/// Paginated alerts response
-class PaginatedAlertsResponse {
+/// Backend API response wrapper
+class BackendApiResponse {
+  final bool success;
+  final String message;
   final List<AlertApiResponse> data;
   final PaginationInfo? pagination;
 
-  PaginatedAlertsResponse({
+  BackendApiResponse({
+    required this.success,
+    required this.message,
     required this.data,
     this.pagination,
   });
 
-  factory PaginatedAlertsResponse.fromJson(Map<String, dynamic> json) {
-    return PaginatedAlertsResponse(
+  factory BackendApiResponse.fromJson(Map<String, dynamic> json) {
+    return BackendApiResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
       data: (json['data'] as List<dynamic>?)
           ?.map((e) => AlertApiResponse.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
@@ -280,7 +286,7 @@ class AlertsCache {
 /// Alerts API Service
 class AlertsApiService {
   static const String baseUrl = 'http://idealchiprnd.pythonanywhere.com';
-  static const String alertsEndpoint = '/api/alerts/active';
+  static const String alertsEndpoint = '/alerts/active';
   
   static final AlertsCache _cache = AlertsCache();
 
@@ -487,7 +493,7 @@ class AlertsApiService {
         throw Exception('Alerts API request failed: ${response.statusCode} ${response.reasonPhrase}');
       }
 
-      final responseData = PaginatedAlertsResponse.fromJson(
+      final responseData = BackendApiResponse.fromJson(
         json.decode(response.body) as Map<String, dynamic>
       );
       

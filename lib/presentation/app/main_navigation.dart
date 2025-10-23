@@ -21,7 +21,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     LiveReadingsInterface(),
     const AlertSiloMonitoringPage(),
-    LiveReadingsInterface(),
+   // LiveReadingsInterface(),
     LiveReadingsInterface(),
     LiveReadingsInterface(),
   ];
@@ -37,11 +37,11 @@ class _MainNavigationState extends State<MainNavigation> {
       activeIcon: Icon(Icons.warning),
       label: 'Alerts',
     ),
-    const BottomNavigationBarItem(
-      icon: Icon(Icons.analytics_outlined),
-      activeIcon: Icon(Icons.analytics),
-      label: 'Reports',
-    ),
+    // const BottomNavigationBarItem(
+    //   icon: Icon(Icons.analytics_outlined),
+    //   activeIcon: Icon(Icons.analytics),
+    //   label: 'Reports',
+    // ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.build_outlined),
       activeIcon: Icon(Icons.build),
