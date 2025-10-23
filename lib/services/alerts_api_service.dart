@@ -385,8 +385,9 @@ class AlertsApiService {
       final color = sensorColors[i];
       final status = colorToStatus(color);
 
-      if (status == AlertStatus.red || status == AlertStatus.yellow)
+      if (status == AlertStatus.red || status == AlertStatus.yellow) {
         alertCount++;
+      }
 
       sensorReadings.add(SensorReading(
         id: 'sensor-${i + 1}',
