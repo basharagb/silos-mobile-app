@@ -523,18 +523,26 @@ class AutoTestController extends ChangeNotifier {
     return _disconnectedSilos.contains(siloNumber);
   }
 
-  // Set silo as scanning (for manual scan simulation)
+  // Set silo as scanning (for manual scan simulation only)
   void setSiloScanning(int siloNumber) {
+    // Only allow manual scanning if auto test is not already running
+    if (_isRunning) {
+      debugPrint('⚠️ [AUTO TEST] Cannot set manual scanning - auto test is running');
+      return;
+    }
     _currentSilo = siloNumber;
     _isRunning = true;
     notifyListeners();
   }
 
-  // Set silo as completed (for manual scan simulation)
+  // Set silo as completed (for manual scan simulation only)
   void setSiloCompleted(int siloNumber) {
-    _currentSilo = null;
-    _isRunning = false;
-    notifyListeners();
+    // Only complete manual scanning if we're not in auto test mode
+    if (_currentSilo == siloNumber && !_isCompleted) {
+      _currentSilo = null;
+      _isRunning = false;
+      notifyListeners();
+    }
   }
 
   @override

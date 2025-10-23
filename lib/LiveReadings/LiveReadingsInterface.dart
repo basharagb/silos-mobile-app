@@ -150,11 +150,18 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       _siloInputController.text = siloNumber.toString();
     });
     
-    // Start scanning sequence
-    _startSiloScan(siloNumber);
-    
-    // Show silo details popup
+    // Show silo details popup (always show, even during auto test)
     _showSiloDetailsPopup(siloNumber);
+    
+    // Only start manual scanning if auto test is NOT running
+    if (!_autoTestController.isRunning) {
+      print('📱 [LIVE READINGS] Manual click on silo $siloNumber - starting scan');
+      _startSiloScan(siloNumber);
+    } else {
+      print('🔄 [LIVE READINGS] Auto test is running - showing popup only for silo $siloNumber');
+      // Just load data for the popup, don't interfere with auto test
+      _loadSiloData(siloNumber);
+    }
     
     // Handle test mode
     if (_testController.currentMode == TestMode.manual && !_testController.isRunning) {
@@ -163,7 +170,13 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   }
 
   Future<void> _startSiloScan(int siloNumber) async {
-    print('🔵 [LIVE READINGS] Starting scan for silo $siloNumber');
+    // Only allow manual scanning if auto test is NOT running
+    if (_autoTestController.isRunning) {
+      print('⚠️ [LIVE READINGS] Auto test is running - ignoring manual scan request for silo $siloNumber');
+      return;
+    }
+    
+    print('🔵 [LIVE READINGS] Starting manual scan for silo $siloNumber');
     
     // Mark silo as scanning (will show blue color)
     _autoTestController.setSiloScanning(siloNumber);
@@ -172,6 +185,12 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     // Simulate scanning delay (like real hardware scan)
     await Future.delayed(const Duration(milliseconds: 1500));
     
+    // Double-check auto test hasn't started during our scan
+    if (_autoTestController.isRunning) {
+      print('⚠️ [LIVE READINGS] Auto test started during manual scan - aborting manual scan');
+      return;
+    }
+    
     // Fetch fresh API data during scan
     await _loadSiloData(siloNumber);
     
@@ -179,7 +198,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     _autoTestController.setSiloCompleted(siloNumber);
     setState(() {}); // Trigger UI update to show API color
     
-    print('✅ [LIVE READINGS] Scan completed for silo $siloNumber');
+    print('✅ [LIVE READINGS] Manual scan completed for silo $siloNumber');
   }
 
   void _showSiloDetailsPopup(int siloNumber) {
