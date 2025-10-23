@@ -527,6 +527,10 @@ class AlertsApiService {
       }
       
       print('🚨 [ALERTS API] Received ${apiData.length} active alerts (page $page/${paginationInfo?.totalPages ?? 1})');
+      print('🚨 [ALERTS API] Response body type: ${responseBody.runtimeType}');
+      if (paginationInfo != null) {
+        print('🚨 [ALERTS API] Pagination info: ${paginationInfo.totalItems} total items, ${paginationInfo.totalPages} total pages');
+      }
       
       if (apiData.isEmpty) {
         print('🚨 [ALERTS API] No active alerts found');
