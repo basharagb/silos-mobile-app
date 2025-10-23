@@ -443,7 +443,7 @@ class AlertsApiService {
   static Future<FetchAlertsResult> fetchActiveAlerts({
     bool forceRefresh = false,
     int page = 1,
-    int limit = 20,
+    int limit = 500,
   }) async {
     print('🚨 [ALERTS API] Fetching active alerts (page: $page, limit: $limit, forceRefresh: $forceRefresh)');
 

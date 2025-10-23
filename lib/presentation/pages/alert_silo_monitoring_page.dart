@@ -18,7 +18,7 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
   int _elapsedTime = 0;
   int _currentPage = 1;
   PaginationInfo? _pagination;
-  static const int _itemsPerPage = 20;
+  static const int _itemsPerPage = 500; // Increased to get all alerts
 
   @override
   void initState() {
