@@ -446,9 +446,10 @@ class AlertsApiService {
   }) async {
     print('🚨 [ALERTS API] Fetching active alerts (page: $page, limit: $limit, forceRefresh: $forceRefresh)');
 
-    // Return cached data if valid and not forcing refresh
-    if (!forceRefresh && _cache.isCacheValid()) {
-      print('🚨 [ALERTS API] Returning cached data');
+    // Don't use cache for pagination - always fetch fresh data for different pages
+    // Only use cache if it's the same page and not forcing refresh
+    if (!forceRefresh && _cache.isCacheValid() && page == 1) {
+      print('🚨 [ALERTS API] Returning cached data for page 1');
       return FetchAlertsResult(
         alerts: _cache.getAlerts(),
         pagination: null,

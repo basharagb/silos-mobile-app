@@ -49,16 +49,20 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
 
       setState(() {
         _alertSilos = result.alerts;
-        _pagination = result.pagination;
+        // Always update pagination info when we get it from API
+        if (result.pagination != null) {
+          _pagination = result.pagination;
+        }
         _currentPage = page;
       });
 
-      print('🚨 [ALERT SILO MONITORING] Successfully loaded ${result.alerts.length} alerts');
+      print('🚨 [ALERT SILO MONITORING] Successfully loaded ${result.alerts.length} alerts for page $page');
     } catch (error) {
       print('🚨 [ALERT SILO MONITORING] Failed to fetch alert silos: $error');
       setState(() {
         _error = error.toString();
         _alertSilos = [];
+        // Don't clear pagination on error - keep it visible
       });
     } finally {
       setState(() {
@@ -93,6 +97,17 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
 
   Future<void> _handlePageChange(int page) async {
     if (page == _currentPage || _loading || _refreshing) return;
+    
+    // Preserve current pagination info during page change
+    final currentPagination = _pagination;
+    
+    setState(() {
+      _currentPage = page;
+      // Keep pagination visible during loading
+      if (currentPagination != null) {
+        _pagination = currentPagination;
+      }
+    });
     
     await _fetchAlertSilos(page: page);
   }
