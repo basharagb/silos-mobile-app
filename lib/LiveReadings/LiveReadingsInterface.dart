@@ -48,14 +48,18 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   
   Future<void> _loadSiloData(int siloNumber) async {
     try {
+      print('📡 [LIVE READINGS] Fetching API data for silo $siloNumber...');
       final data = await ApiService.getSiloSensorData(siloNumber);
       if (data != null && mounted) {
+        print('✅ [LIVE READINGS] Received data for silo $siloNumber: color=${data.siloColor}, maxTemp=${data.maxTemp}°C');
         setState(() {
           _siloDataCache[siloNumber] = data;
         });
+      } else {
+        print('❌ [LIVE READINGS] No data received for silo $siloNumber');
       }
     } catch (e) {
-      print('Error loading silo $siloNumber data: $e');
+      print('❌ [LIVE READINGS] Error loading silo $siloNumber data: $e');
     }
   }
 
@@ -105,6 +109,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
         // Use API silo color if available
         final colorHex = cachedData.siloColor;
         if (colorHex.isNotEmpty && colorHex != ApiService.wheatColor) {
+          print('🎨 [LIVE READINGS] Using API color for silo $num: $colorHex');
           return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
         }
       } catch (e) {
@@ -145,10 +150,9 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       _siloInputController.text = siloNumber.toString();
     });
     
-    // Load silo data if not cached
-    if (!_siloDataCache.containsKey(siloNumber)) {
-      _loadSiloData(siloNumber);
-    }
+    // Always load fresh silo data when clicked to get real-time colors
+    _loadSiloData(siloNumber);
+    print('🔄 [LIVE READINGS] Loading fresh data for silo $siloNumber');
     
     // Show silo details popup
     _showSiloDetailsPopup(siloNumber);
