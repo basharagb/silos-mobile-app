@@ -14,8 +14,6 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
-  DateTime? _loadingStartTime;
-  int _elapsedTime = 0;
   int _currentPage = 1;
   PaginationInfo? _pagination;
   static const int _itemsPerPage = 20; // Fixed at 20 items per page (matching React app)
@@ -30,8 +28,6 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
     setState(() {
       _loading = true;
       _error = null;
-      _loadingStartTime = DateTime.now();
-      _elapsedTime = 0;
     });
 
     try {
@@ -67,8 +63,6 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
     } finally {
       setState(() {
         _loading = false;
-        _loadingStartTime = null;
-        _elapsedTime = 0;
       });
     }
   }

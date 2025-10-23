@@ -18,55 +18,98 @@ class GroupProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: isRetryPhase ? Colors.orange.shade300 : Colors.blue.shade300,
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: (isRetryPhase ? Colors.orange : Colors.blue).withOpacity(0.2),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Progress header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isRetryPhase ? 'Retry Phase' : 'Auto Test Progress',
+                isRetryPhase ? 'Retry Progress' : 'Scan Progress',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
-                  color: isRetryPhase ? Colors.orange : Colors.blue,
+                  color: isRetryPhase ? Colors.orange.shade800 : Colors.blue.shade800,
                 ),
               ),
               Text(
-                'Group ${currentGroup + 1}/$totalGroups',
+                '${overallProgress.toStringAsFixed(1)}%',
                 style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey.shade600,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isRetryPhase ? Colors.orange.shade800 : Colors.blue.shade800,
                 ),
               ),
             ],
           ),
+          
           SizedBox(height: 8.h),
-          LinearProgressIndicator(
-            value: overallProgress / 100,
-            backgroundColor: Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              isRetryPhase ? Colors.orange : Colors.blue,
+          
+          // Progress bar
+          Container(
+            height: 8.h,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: (overallProgress / 100).clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isRetryPhase 
+                        ? [Colors.orange.shade400, Colors.orange.shade600]
+                        : [Colors.blue.shade400, Colors.blue.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
             ),
           ),
-          SizedBox(height: 4.h),
-          Text(
-            '${overallProgress.toStringAsFixed(1)}%',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey.shade600,
-            ),
+          
+          SizedBox(height: 8.h),
+          
+          // Group indicators
+          Row(
+            children: List.generate(totalGroups, (index) {
+              Color color;
+              if (index < currentGroup) {
+                color = Colors.green.shade400; // Completed
+              } else if (index == currentGroup) {
+                color = isRetryPhase ? Colors.orange.shade400 : Colors.blue.shade400; // Current
+              } else {
+                color = Colors.grey.shade300; // Pending
+              }
+              
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 1.w),
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+              );
+            }),
           ),
         ],
       ),
@@ -350,122 +393,6 @@ class GroupPaginationWidget extends StatelessWidget {
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
         ),
-      ),
-    );
-  }
-}
-
-class GroupProgressBar extends StatelessWidget {
-  final int currentGroup;
-  final int totalGroups;
-  final double overallProgress;
-  final bool isRetryPhase;
-
-  const GroupProgressBar({
-    super.key,
-    required this.currentGroup,
-    required this.totalGroups,
-    required this.overallProgress,
-    this.isRetryPhase = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: isRetryPhase ? Colors.orange.shade300 : Colors.blue.shade300,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (isRetryPhase ? Colors.orange : Colors.blue).withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Progress header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                isRetryPhase ? 'Retry Progress' : 'Scan Progress',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isRetryPhase ? Colors.orange.shade800 : Colors.blue.shade800,
-                ),
-              ),
-              Text(
-                '${overallProgress.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isRetryPhase ? Colors.orange.shade800 : Colors.blue.shade800,
-                ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: 8.h),
-          
-          // Progress bar
-          Container(
-            height: 8.h,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: (overallProgress / 100).clamp(0.0, 1.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isRetryPhase 
-                        ? [Colors.orange.shade400, Colors.orange.shade600]
-                        : [Colors.blue.shade400, Colors.blue.shade600],
-                  ),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-              ),
-            ),
-          ),
-          
-          SizedBox(height: 8.h),
-          
-          // Group indicators
-          Row(
-            children: List.generate(totalGroups, (index) {
-              Color color;
-              if (index < currentGroup) {
-                color = Colors.green.shade400; // Completed
-              } else if (index == currentGroup) {
-                color = isRetryPhase ? Colors.orange.shade400 : Colors.blue.shade400; // Current
-              } else {
-                color = Colors.grey.shade300; // Pending
-              }
-              
-              return Expanded(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 1.w),
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
       ),
     );
   }
