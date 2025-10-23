@@ -127,7 +127,10 @@ class _MainNavigationState extends State<MainNavigation> {
                 color: Colors.white,
                 onSelected: (value) {
                   if (value == 'logout') {
-                    context.read<AuthBloc>().add(AuthLogoutRequested());
+                    setState(() {
+                      context.read<AuthBloc>().add(AuthLogoutRequested());
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                    });
                   }
                 },
                 itemBuilder: (BuildContext context) => [
