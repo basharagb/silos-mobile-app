@@ -492,6 +492,111 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
             
             SizedBox(height: 12.h),
             
+            // Alert details (Active Since, Duration, Affected Levels)
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: isColorDark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Active Since
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 14.sp,
+                        color: textColor.withOpacity(0.8),
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        'Active Since:',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: textColor.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    _formatDateTime(alert.activeSince),
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: textColor.withOpacity(0.9),
+                    ),
+                  ),
+                  
+                  SizedBox(height: 8.h),
+                  
+                  // Duration
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer,
+                        size: 14.sp,
+                        color: textColor.withOpacity(0.8),
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        'Duration:',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: textColor.withOpacity(0.8),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        alert.duration,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: textColor.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  SizedBox(height: 8.h),
+                  
+                  // Affected Levels
+                  if (alert.affectedLevels.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.layers,
+                          size: 14.sp,
+                          color: textColor.withOpacity(0.8),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          'Affected Levels:',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            color: textColor.withOpacity(0.8),
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          alert.affectedLevels.join(', '),
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: textColor.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            
+            SizedBox(height: 12.h),
+            
             // Status message
             Container(
               padding: EdgeInsets.all(12.w),
@@ -652,6 +757,18 @@ class _AlertSiloMonitoringPageState extends State<AlertSiloMonitoringPage> {
       // Fall back to false if parsing fails
     }
     return false;
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    // Format like: 10/13/2025, 07:15:40
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final year = dateTime.year.toString();
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final second = dateTime.second.toString().padLeft(2, '0');
+    
+    return '$month/$day/$year, $hour:$minute:$second';
   }
 
   Widget _buildPaginationControls() {
