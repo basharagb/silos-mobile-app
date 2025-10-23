@@ -150,9 +150,8 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       _siloInputController.text = siloNumber.toString();
     });
     
-    // Always load fresh silo data when clicked to get real-time colors
-    _loadSiloData(siloNumber);
-    print('🔄 [LIVE READINGS] Loading fresh data for silo $siloNumber');
+    // Start scanning sequence
+    _startSiloScan(siloNumber);
     
     // Show silo details popup
     _showSiloDetailsPopup(siloNumber);
@@ -161,6 +160,26 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     if (_testController.currentMode == TestMode.manual && !_testController.isRunning) {
       _testController.startManualTest(siloNumber);
     }
+  }
+
+  Future<void> _startSiloScan(int siloNumber) async {
+    print('🔵 [LIVE READINGS] Starting scan for silo $siloNumber');
+    
+    // Mark silo as scanning (will show blue color)
+    _autoTestController.setSiloScanning(siloNumber);
+    setState(() {}); // Trigger UI update to show blue color
+    
+    // Simulate scanning delay (like real hardware scan)
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
+    // Fetch fresh API data during scan
+    await _loadSiloData(siloNumber);
+    
+    // Mark silo as completed (will show API color)
+    _autoTestController.setSiloCompleted(siloNumber);
+    setState(() {}); // Trigger UI update to show API color
+    
+    print('✅ [LIVE READINGS] Scan completed for silo $siloNumber');
   }
 
   void _showSiloDetailsPopup(int siloNumber) {

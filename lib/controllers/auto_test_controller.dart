@@ -523,6 +523,20 @@ class AutoTestController extends ChangeNotifier {
     return _disconnectedSilos.contains(siloNumber);
   }
 
+  // Set silo as scanning (for manual scan simulation)
+  void setSiloScanning(int siloNumber) {
+    _currentSilo = siloNumber;
+    _isRunning = true;
+    notifyListeners();
+  }
+
+  // Set silo as completed (for manual scan simulation)
+  void setSiloCompleted(int siloNumber) {
+    _currentSilo = null;
+    _isRunning = false;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _siloTimer?.cancel();
