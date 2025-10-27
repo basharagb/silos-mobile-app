@@ -8,6 +8,7 @@ import '../blocs/auth/auth_bloc.dart';
 import '../pages/login_page.dart';
 import '../pages/alert_silo_monitoring_page.dart';
 import '../../pages/maintenance_page.dart';
+import '../../pages/settings_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -23,7 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
     LiveReadingsInterface(),
     const AlertSiloMonitoringPage(),
     const MaintenancePage(),
-    LiveReadingsInterface(),
+    const SettingsPage(),
   ];
 
   final List<BottomNavigationBarItem> _bottomNavItems = [
