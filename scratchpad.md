@@ -365,6 +365,24 @@ The system already works as requested:
 **Solution**: Updated `getSiloColor()` to use proper radix 16 parsing for hex colors
 **Result**: API colors now display correctly for scanned silos and persist until clicked
 
+## NEW TASK: Fix Wheat Color to Proper Yellowish Grain Color
+
+### Task Description
+Update unscanned silos to display proper wheat color (yellowish like wheat grain) instead of brown/gray colors.
+
+### ✅ TASK COMPLETED
+
+**Issue**: Wheat color was brownish (#93856b) instead of yellowish like actual wheat grain
+**Solution**: Updated wheat color to proper yellowish #F5DEB3 across all components
+**Changes Made**:
+- Updated ApiService.wheatColor constant from #93856b to #F5DEB3
+- Fixed maintenance page to use consistent wheat color constant
+- Fixed silo progress indicator to use same wheat color constant
+- All unscanned silos now show proper yellowish wheat grain color
+
+**Commit**: 8022efd - "fix: Update wheat color to proper yellowish grain color"
+**Status**: Successfully pushed to GitHub main branch
+
 ## Lessons
 - Weather station uses slave_id 21 for inside temp and 22 for outside temp
 - Real-time updates should refresh every 30 seconds for weather, 15-30 seconds for silo data

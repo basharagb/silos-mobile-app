@@ -347,10 +347,8 @@ class AutomaticMonitoringService extends ChangeNotifier {
       // Move to next silo after 1 second
       _currentInitialScanIndex++;
       
-      // Batch notifications every 5 silos to reduce rendering load
-      if (_currentInitialScanIndex % 5 == 0 || _currentInitialScanIndex >= _allSilos.length) {
-        notifyListeners(); // Update UI less frequently
-      }
+      // Update UI after each silo to show proper color transitions
+      _notifyListenersDebounced();
       
       if (_isInitialScanning) {
         _initialScanTimer = Timer(const Duration(seconds: 1), () {
