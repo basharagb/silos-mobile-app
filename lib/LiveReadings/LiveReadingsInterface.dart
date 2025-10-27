@@ -352,9 +352,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
                     child: Column(
                       children: [
                         // Control panel at top
-                        _buildControlPanel(),
-                        
-                        SizedBox(height: 16.h),
+
                         
                         // Auto test progress bar
                         if (_autoTestController.isRunning)
@@ -380,6 +378,9 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
                           onGroupChanged: (index) => _autoTestController.navigateToGroup(index),
                           isAutoTestRunning: _autoTestController.isRunning,
                         ),
+                        _buildControlPanel(),
+
+                        SizedBox(height: 16.h),
                       ],
                     ),
                   );
@@ -640,43 +641,43 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
           
           SizedBox(height: 16.h),
           
-          // Silo Sensors section
-          Text(
-            'Silo Sensors',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-          ),
+          // // Silo Sensors section
+          // Text(
+          //   'Silo Sensors',
+          //   style: TextStyle(
+          //     fontSize: 16.sp,
+          //     fontWeight: FontWeight.w600,
+          //     color: Colors.grey.shade700,
+          //   ),
+          // ),
+          //
+          // SizedBox(height: 8.h),
+          //
+          // // Animated Silo Sensors Panel
+          // AnimatedBuilder(
+          //   animation: _autoTestController,
+          //   builder: (context, child) {
+          //     return AnimatedSensorReadings(
+          //       selectedSilo: _autoTestController.currentSilo ?? _selectedSilo,
+          //       isReading: _autoTestController.isRunning,
+          //       onRefresh: () => _loadSiloData(_autoTestController.currentSilo ?? _selectedSilo),
+          //     );
+          //   },
+          // ),
           
-          SizedBox(height: 8.h),
-          
-          // Animated Silo Sensors Panel
-          AnimatedBuilder(
-            animation: _autoTestController,
-            builder: (context, child) {
-              return AnimatedSensorReadings(
-                selectedSilo: _autoTestController.currentSilo ?? _selectedSilo,
-                isReading: _autoTestController.isRunning,
-                onRefresh: () => _loadSiloData(_autoTestController.currentSilo ?? _selectedSilo),
-              );
-            },
-          ),
-          
-          SizedBox(height: 16.h),
-          
-          // Animated Grain Level Panel
-          AnimatedBuilder(
-            animation: _autoTestController,
-            builder: (context, child) {
-              return AnimatedGrainLevel(
-                selectedSilo: _autoTestController.currentSilo ?? _selectedSilo,
-                isReading: _autoTestController.isRunning,
-                onRefresh: () => _loadSiloData(_autoTestController.currentSilo ?? _selectedSilo),
-              );
-            },
-          ),
+          // SizedBox(height: 16.h),
+          //
+          // // Animated Grain Level Panel
+          // AnimatedBuilder(
+          //   animation: _autoTestController,
+          //   builder: (context, child) {
+          //     return AnimatedGrainLevel(
+          //       selectedSilo: _autoTestController.currentSilo ?? _selectedSilo,
+          //       isReading: _autoTestController.isRunning,
+          //       onRefresh: () => _loadSiloData(_autoTestController.currentSilo ?? _selectedSilo),
+          //     );
+          //   },
+          // ),
         ],
       ),
     );
