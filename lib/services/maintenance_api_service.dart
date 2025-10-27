@@ -238,7 +238,7 @@ class MaintenanceSiloApiData {
 
 /// Maintenance API Service
 class MaintenanceApiService {
-  static const String _baseUrl = 'http://192.168.1.14:5000';
+  static const String _baseUrl = 'http://localhost:3000';
   static const Duration _timeout = Duration(seconds: 10);
 
   /// Fetch maintenance cable data for a specific silo
