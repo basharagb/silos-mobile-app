@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,11 @@ import 'presentation/pages/splash_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Disable semantics debugging in debug mode to prevent rendering errors
+  if (kDebugMode) {
+    debugPrint('🔧 [DEBUG] Disabling semantics to prevent rendering errors');
+  }
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
