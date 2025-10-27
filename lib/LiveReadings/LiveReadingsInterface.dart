@@ -422,37 +422,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
           
           SizedBox(height: 16.h),
           
-          // Silo input
-          Row(
-            children: [
-              Text(
-                'Silo:',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: TextField(
-                  controller: _siloInputController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                  ),
-                  onSubmitted: (value) {
-                    final siloNumber = int.tryParse(value);
-                    if (siloNumber != null && siloNumber >= 1 && siloNumber <= 195) {
-                      _onSiloTap(siloNumber);
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
+
           
           SizedBox(height: 16.h),
           
