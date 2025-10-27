@@ -73,15 +73,15 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
 
   Widget _getStatusIcon(String color, {bool isDisconnected = false}) {
     if (isDisconnected) {
-      return Icon(Icons.close, size: 16.sp, color: Colors.red);
+      return Icon(Icons.close, size: 10.sp, color: Colors.red); // 35% smaller: 16 -> 10.4 ≈ 10
     }
     if (color == '#d14141') {
-      return Icon(Icons.warning, size: 16.sp, color: Colors.red);
+      return Icon(Icons.warning, size: 10.sp, color: Colors.red); // 35% smaller: 16 -> 10.4 ≈ 10
     }
     if (color == '#ff9800') {
-      return Icon(Icons.warning, size: 16.sp, color: Colors.orange);
+      return Icon(Icons.warning, size: 10.sp, color: Colors.orange); // 35% smaller: 16 -> 10.4 ≈ 10
     }
-    return Icon(Icons.check_circle, size: 16.sp, color: Colors.green);
+    return Icon(Icons.check_circle, size: 10.sp, color: Colors.green); // 35% smaller: 16 -> 10.4 ≈ 10
   }
 
   String _getStatusText(String color, {bool isDisconnected = false}) {
@@ -320,16 +320,8 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // System Overview
-          _buildSystemOverview(),
-          SizedBox(height: 20.h),
-          
-          // Cable Temperature Comparison
+          // Cable Temperature Comparison Table Only
           _buildCableComparison(),
-          SizedBox(height: 20.h),
-          
-          // Sensor Values
-          _buildSensorValues(),
         ],
       ),
     );
@@ -565,30 +557,30 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
 
   Widget _buildTableCell(String text, {bool isHeader = false, Color? color, Widget? icon}) {
     return Container(
-      padding: EdgeInsets.all(8.w),
+      padding: EdgeInsets.all(5.w), // 35% smaller: 8 -> 5.2 ≈ 5
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (color != null) ...[
             Container(
-              width: 12.w,
-              height: 12.h,
+              width: 8.w, // 35% smaller: 12 -> 7.8 ≈ 8
+              height: 8.h, // 35% smaller: 12 -> 7.8 ≈ 8
               decoration: BoxDecoration(
                 color: color,
                 shape: BoxShape.circle,
               ),
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 5.w), // 35% smaller: 8 -> 5.2 ≈ 5
           ],
           if (icon != null) ...[
             icon,
-            SizedBox(width: 4.w),
+            SizedBox(width: 3.w), // 35% smaller: 4 -> 2.6 ≈ 3
           ],
           Flexible(
             child: Text(
               text,
               style: TextStyle(
-                fontSize: isHeader ? 14.sp : 12.sp,
+                fontSize: isHeader ? 9.sp : 8.sp, // 35% smaller: 14->9, 12->8
                 fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
                 color: isHeader ? Colors.grey[700] : Colors.grey[900],
               ),
@@ -603,18 +595,18 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
   Widget _buildSensorCell(CableSensorData? sensor) {
     if (sensor == null) {
       return Container(
-        padding: EdgeInsets.all(8.w),
+        padding: EdgeInsets.all(5.w), // 35% smaller: 8 -> 5.2 ≈ 5
         child: Container(
-          padding: EdgeInsets.all(8.w),
+          padding: EdgeInsets.all(5.w), // 35% smaller: 8 -> 5.2 ≈ 5
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(6.r),
+            borderRadius: BorderRadius.circular(4.r), // 35% smaller: 6 -> 3.9 ≈ 4
             border: Border.all(color: Colors.grey.shade300),
           ),
           child: Text(
             'N/A',
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 8.sp, // 35% smaller: 12 -> 7.8 ≈ 8
               color: Colors.grey[400],
             ),
             textAlign: TextAlign.center,
@@ -627,26 +619,26 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
     final sensorColor = _parseColor(sensor.color);
 
     return Container(
-      padding: EdgeInsets.all(8.w),
+      padding: EdgeInsets.all(5.w), // 35% smaller: 8 -> 5.2 ≈ 5
       child: Container(
-        padding: EdgeInsets.all(8.w),
+        padding: EdgeInsets.all(5.w), // 35% smaller: 8 -> 5.2 ≈ 5
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(6.r),
-          border: Border.all(color: sensorColor, width: 2),
+          borderRadius: BorderRadius.circular(4.r), // 35% smaller: 6 -> 3.9 ≈ 4
+          border: Border.all(color: sensorColor, width: 1.3), // 35% smaller: 2 -> 1.3
         ),
         child: Column(
           children: [
             Text(
-              isDisconnected ? 'DISCONNECTED' : '${sensor.level.toStringAsFixed(1)}°C',
+              isDisconnected ? 'DISC' : '${sensor.level.toStringAsFixed(1)}°C',
               style: TextStyle(
-                fontSize: isDisconnected ? 10.sp : 14.sp,
+                fontSize: isDisconnected ? 7.sp : 9.sp, // 35% smaller: 10->7, 14->9
                 fontWeight: FontWeight.bold,
                 color: sensorColor,
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 4.h),
+            SizedBox(height: 2.h), // 35% smaller: 4 -> 2.6 ≈ 2
             _getStatusIcon(sensor.color, isDisconnected: isDisconnected),
           ],
         ),
