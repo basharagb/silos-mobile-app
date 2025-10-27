@@ -371,13 +371,18 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
                     
                     SizedBox(height: 16.h),
                     
-                    // Current silo group with sensors and grain level panels - separate AnimatedBuilder with error boundary
+                    // Current silo group with sensors and grain level panels - separate AnimatedBuilders with error boundary
                     Builder(
                       builder: (context) {
                         try {
                           return AnimatedBuilder(
                             animation: _autoTestController,
-                            builder: (context, child) => _buildCurrentSiloGroup(),
+                            builder: (context, child) {
+                              return AnimatedBuilder(
+                                animation: _monitoringService,
+                                builder: (context, child) => _buildCurrentSiloGroup(),
+                              );
+                            },
                           );
                         } catch (e) {
                           debugPrint('❌ [EMERGENCY] Silo group widget error: $e');

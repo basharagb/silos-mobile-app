@@ -487,6 +487,9 @@ class _MaintenancePageState extends State<MaintenancePage> {
                   child: AnimatedBuilder(
                     animation: _autoTestController,
                     builder: (context, child) {
+                      return AnimatedBuilder(
+                        animation: _monitoringService,
+                        builder: (context, child) {
                       return SingleChildScrollView(
                         padding: EdgeInsets.all(8.w),
                         child: Column(
@@ -512,6 +515,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
                             SizedBox(height: 16.h),
                           ],
                         ),
+                      );
+                        },
                       );
                     },
                   ),
