@@ -100,15 +100,18 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       try {
         final colorHex = cachedData.siloColor;
         if (colorHex.isNotEmpty) {
-          return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
+          // Parse hex color properly: #93856b -> 0xFF93856b
+          final cleanHex = colorHex.replaceAll('#', '');
+          return Color(int.parse('FF$cleanHex', radix: 16));
         }
       } catch (e) {
-        // If API color parsing fails, use wheat color
+        print('⚠️ [COLOR] Failed to parse API color for silo $num: ${cachedData.siloColor}, using wheat color');
       }
     }
     
     // Unscanned silo - always use wheat color (yellowish like wheat grain)
-    return Color(int.parse(ApiService.wheatColor.replaceFirst('#', '0xFF')));
+    final cleanWheatHex = ApiService.wheatColor.replaceAll('#', '');
+    return Color(int.parse('FF$cleanWheatHex', radix: 16));
   }
   
   /// Check if silo has been scanned (has cached data)
