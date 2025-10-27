@@ -112,7 +112,7 @@ Implement an automatic monitoring system that:
 ### ✅ TASK COMPLETED SUCCESSFULLY
 
 **Branch:** `feature/automatic-monitoring-3min`
-**Latest Commit:** 6783427 - "feat: Update silo display logic for wheat/API colors and scanning indicators"
+**Latest Commit:** 5a03675 - "feat: Add initial scan on app launch with 1-second intervals"
 **PR:** https://github.com/basharagb/silos-mobile-app/pull/new/feature/automatic-monitoring-3min
 
 ### ✅ FINAL SILO DISPLAY LOGIC IMPLEMENTED
@@ -129,6 +129,23 @@ Implement an automatic monitoring system that:
 - Smart text contrast (auto-adjusts based on background color)
 - Status indicator dots for different states
 - Smooth color transitions
+
+### ✅ INITIAL SCAN ON APP LAUNCH IMPLEMENTED
+
+**Initial Scan Features:**
+- **Auto-start**: Begins automatically after login/app launch
+- **Sequential Scanning**: 1 second per silo (195 silos total)
+- **Real-time Progress**: Shows current silo being scanned
+- **Visual Indicators**: Blue scanner icon, progress bar, completion counter
+- **Seamless Transition**: Switches to 3-minute monitoring after completion
+
+**Scan Process:**
+1. App launches → Splash screen
+2. Login/Authentication
+3. Live Readings opens
+4. Initial scan starts immediately (1s per silo)
+5. Shows scanning progress with visual feedback
+6. After scan completes → Regular 3-minute monitoring begins
 
 ### ✅ IMPLEMENTATION COMPLETED
 
