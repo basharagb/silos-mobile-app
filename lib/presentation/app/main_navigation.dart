@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../pages/login_page.dart';
 import '../pages/alert_silo_monitoring_page.dart';
+import '../../pages/maintenance_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -21,8 +22,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     LiveReadingsInterface(),
     const AlertSiloMonitoringPage(),
-   // LiveReadingsInterface(),
-    LiveReadingsInterface(),
+    const MaintenancePage(),
     LiveReadingsInterface(),
   ];
 
