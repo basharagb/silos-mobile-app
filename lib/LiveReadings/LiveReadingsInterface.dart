@@ -135,12 +135,29 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   }
 
   bool isSquare(int num) {
+    // Based on web interface layout - exact mapping of square silos
     const squareNumbers = [
-      4, 2, 8, 10, 21, 19, 17, 15, 13,
-      43, 41, 39, 37, 35, 32, 30, 28, 26, 24,
-      175, 171, 168, 164, 161, 156, 152, 149, 145, 142,
-      137, 133, 130, 126, 123, 118, 114, 111, 107, 104,
-      194, 190, 187, 183, 180
+      // Group 1: Row 2 (middle row) - all square
+      2, 4, 6, 8, 10,
+      
+      // Group 2: Row 2 (middle row) - all square  
+      13, 15, 17, 19, 21,
+      
+      // Group 3: Row 2 (middle row) - all square
+      24, 26, 28, 30, 32,
+      
+      // Group 4: Row 2 (middle row) - all square
+      35, 37, 39, 41, 43,
+      
+      // Group 5: Row 2 (middle row) - all square
+      46, 48, 50, 52, 54,
+      
+      // Groups 6-10: All silos are square (101-195)
+      101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
+      120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138,
+      139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+      158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176,
+      177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195
     ];
     return squareNumbers.contains(num);
   }
