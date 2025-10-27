@@ -9,7 +9,35 @@
 
 **🏭 Industrial IoT Mobile Platform for Real-Time Silo Temperature Management**
 
-*Monitoring 150 Physical Silos • 1,200+ Temperature Sensors • Beautiful Animations*
+*Monitoring 195 Physical Silos • 1,560+ Temperature Sensors • Real-Time Monitoring • Beautiful Animations*
+
+## 📋 App Description
+
+The **Silo Monitoring Mobile App** is a comprehensive Flutter-based industrial IoT platform designed for real-time monitoring and management of grain storage silos. This professional-grade mobile application provides seamless monitoring of **195 physical silos** with **8 temperature sensors per silo**, delivering critical temperature data and maintenance insights to agricultural and industrial facilities.
+
+### 🎯 Core Functionality
+
+**Live Readings Dashboard:**
+- Real-time temperature monitoring for all 195 silos
+- Automatic scanning every 3 minutes with fast batch checking (<3 seconds)
+- Initial scan on app launch (1 second per silo)
+- Color-coded silo status: Wheat (unscanned) → Blue (scanning) → API Color (scanned)
+- Interactive silo grid with circular progress indicators
+- Weather station integration with inside/outside temperature readings
+
+**Maintenance System:**
+- Cable testing and diagnostics for silo sensors
+- Sensor status monitoring (S1-S8 per silo)
+- Connection state verification for circular silos (2 cables) and square silos (1 cable)
+- Detailed cable temperature comparison tables
+- Manual testing capabilities with visual feedback
+
+**Smart Features:**
+- Automatic color synchronization between Live Readings and Maintenance pages
+- Cached API colors persist until manual refresh
+- Pagination system for organized silo group navigation
+- Responsive design optimized for mobile devices
+- Professional UI with Material Design 3 principles
 
 </div>
 
@@ -327,15 +355,41 @@ const API_CONFIG = {
 ## 📄 License & Contact
 
 ### **Project Information**
-- **Developer**: Eng. Bashar Zabadani
-- **Organization**: iDEALCHiP Technology Co.
-- **Project Type**: Industrial IoT Mobile Platform
+- **Developer**: Eng. Bashar Moh Imad
+- **Organization**: iDEALCHiP Technology Co. Ltd.
+- **Project Type**: Industrial IoT Mobile Platform - Silo Monitoring System
 - **License**: Proprietary - Industrial Use
 
-### **Contact Information**
-- **Email**: basharagb@gmail.com
+### **Developer Contact Information**
+- **Name**: Eng. Bashar Moh Imad
 - **Phone**: +962780853195
+- **Email**: basharagb@gmail.com
 - **LinkedIn**: [bashar-mohammad-77328b10b](https://www.linkedin.com/in/bashar-mohammad-77328b10b/)
+
+### **Company Information - iDEALCHiP Technology Co. Ltd.**
+**Building the Future Since 1997**
+
+Since 1997, iDEALCHiP has led technological innovation, specializing in IoT, IT, and electronics R&D. Our expertise spans Queuing Management Systems, Software Development, LED Displays, Building Facade Lighting, Smart City Solutions, Cladding Art, and we're committed to delivering cutting-edge, tailored developments for our valued customers.
+
+**Company Stats:**
+- **28+ Years Experience** in technology innovation
+- **2000+ Projects Completed** across various industries
+- **50+ Skilled Staff** in R&D, IT, and manufacturing
+- **170+ Happy Clients** worldwide
+
+**Contact Information:**
+- **Phone**: +962 7 9021 7000
+- **Email**: idealchip@idealchip.com
+- **Address**: 213, Al Shahid St, Tabarbour, Amman, Jordan P.O.Box 212191 Amman, 11121
+- **WhatsApp**: +962 7 9021 7000
+
+**Our Services:**
+- Queue Management Systems
+- Software Development & Custom Solutions
+- LED Displays & Digital Signage
+- Building Facade Lighting
+- Smart City Solutions & IoT
+- System Integration & Technical Support
 
 ---
 

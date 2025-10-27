@@ -7,6 +7,7 @@ import '../widgets/silo_progress_indicator.dart';
 import '../controllers/auto_test_controller.dart';
 import '../services/maintenance_api_service.dart';
 import '../services/api_service.dart';
+import '../services/automatic_monitoring_service.dart';
 
 class MaintenancePage extends StatefulWidget {
   const MaintenancePage({super.key});
@@ -17,6 +18,7 @@ class MaintenancePage extends StatefulWidget {
 
 class _MaintenancePageState extends State<MaintenancePage> {
   late AutoTestController _autoTestController;
+  late AutomaticMonitoringService _monitoringService;
   int _selectedSilo = 112; // Keep for potential future use
   int? _testingSilo;
   int? _selectedSiloForPopup;
@@ -30,6 +32,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
   void initState() {
     super.initState();
     _autoTestController = AutoTestController();
+    _monitoringService = AutomaticMonitoringService();
     _initializeController();
   }
   
@@ -97,18 +100,34 @@ class _MaintenancePageState extends State<MaintenancePage> {
   }
 
   Color getSiloColor(int num) {
-    // Check if we have maintenance data (scanned silos)
-    final maintenanceData = _maintenanceDataCache[num];
+    // First check if Live Readings has cached data (shared cache)
+    final liveReadingsData = _monitoringService.getCachedSiloData(num);
     
+    if (liveReadingsData != null) {
+      // Use color from Live Readings cache for consistency
+      try {
+        final colorHex = liveReadingsData.siloColor;
+        if (colorHex.isNotEmpty) {
+          final cleanHex = colorHex.replaceAll('#', '');
+          return Color(int.parse('FF$cleanHex', radix: 16));
+        }
+      } catch (e) {
+        print('⚠️ [MAINTENANCE COLOR] Failed to parse Live Readings color for silo $num: ${liveReadingsData.siloColor}');
+      }
+    }
+    
+    // Fallback to maintenance-specific data if no Live Readings data
+    final maintenanceData = _maintenanceDataCache[num];
     if (maintenanceData != null) {
-      // Scanned silo - use maintenance API color
       try {
         final colorString = maintenanceData.siloColor.replaceAll('#', '');
         return Color(int.parse('FF$colorString', radix: 16));
       } catch (e) {
-        return Colors.green; // Default if color parsing fails
+        print('⚠️ [MAINTENANCE COLOR] Failed to parse maintenance color for silo $num');
       }
-    } else if (isSiloScanning(num)) {
+    }
+    
+    if (isSiloScanning(num)) {
       // Currently scanning - blue color
       return Colors.blue.shade400;
     } else {

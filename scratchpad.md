@@ -383,6 +383,35 @@ Update unscanned silos to display proper wheat color (yellowish like wheat grain
 **Commit**: 8022efd - "fix: Update wheat color to proper yellowish grain color"
 **Status**: Successfully pushed to GitHub main branch
 
+## NEW TASK: Fix Stuck Scanning State During Initial Scan
+
+### Task Description
+Fix issue where silos appear stuck in blue scanning state during initial scan, preventing proper color transitions from wheat → blue → API color.
+
+### Root Cause Analysis ✅
+**Problem**: Silos appeared stuck in scanning state (blue color) even after being scanned
+**Cause**: UI notifications were batched every 5 silos, but `currentInitialScanSilo` updated immediately
+**Result**: Mismatch between actual scan progress and UI state
+
+### ✅ TASK COMPLETED
+
+**Issue**: Batched notifications (every 5 silos) caused UI lag and stuck scanning states
+**Solution**: Update UI after each individual silo scan using debounced notifications
+**Changes Made**:
+- Removed batched notifications during initial scan
+- Use `_notifyListenersDebounced()` after each silo completion
+- Maintain 1-second scanning interval per silo
+- Ensure proper color transitions: wheat → blue (scanning) → API color (scanned)
+
+**Scanning Logic Verified**:
+- ✅ 1-second interval per silo (`Duration(seconds: 1)`)
+- ✅ Proper color transitions based on scan state
+- ✅ Circular progress indicator shows correct states
+- ✅ API colors cached and displayed after scan completion
+
+**Commit**: 2c89e8a - "fix: Resolve stuck scanning state during initial scan"
+**Status**: Successfully pushed to GitHub main branch
+
 ## Lessons
 - Weather station uses slave_id 21 for inside temp and 22 for outside temp
 - Real-time updates should refresh every 30 seconds for weather, 15-30 seconds for silo data
