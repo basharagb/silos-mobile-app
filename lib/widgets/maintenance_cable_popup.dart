@@ -115,9 +115,9 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
       color: Colors.black.withOpacity(0.5),
       child: Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.95,
-          height: MediaQuery.of(context).size.height * 0.9,
-          margin: EdgeInsets.all(16.w),
+          width: 0.95.sw,
+          height: 0.9.sh,
+          margin: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
@@ -133,7 +133,7 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
             children: [
               // Header
               Container(
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
@@ -174,30 +174,16 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
                           ),
                           if (_siloData != null) ...[
                             SizedBox(height: 4.h),
-                            Row(
-                              children: [
-                                Text(
-                                  '${_siloData!.siloGroup} • ',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: Colors.white70,
-                                  ),
+                            Flexible(
+                              child: Text(
+                                '${_siloData!.siloGroup} • ${_siloData!.cableCount == 2 ? 'Circular' : 'Square'} • ${_siloData!.cableCount} Cable${_siloData!.cableCount != 1 ? 's' : ''}',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white70,
                                 ),
-                                Text(
-                                  '${_siloData!.cableCount == 2 ? 'Circular' : 'Square'} • ',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                                Text(
-                                  '${_siloData!.cableCount} Cable${_siloData!.cableCount != 1 ? 's' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ],
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
                           ],
                         ],
@@ -330,7 +316,7 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
     }
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(12.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -699,9 +685,9 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
-              crossAxisSpacing: 8.w,
-              mainAxisSpacing: 8.h,
-              childAspectRatio: 1.2,
+              crossAxisSpacing: 6.w,
+              mainAxisSpacing: 6.h,
+              childAspectRatio: 1.1,
             ),
             itemCount: 8,
             itemBuilder: (context, index) {
@@ -718,11 +704,11 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
               final displayValue = isDisabled ? 'DISCONNECTED' : '${value.toStringAsFixed(1)}°C';
 
               return Container(
-                padding: EdgeInsets.all(8.w),
+                padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
                   color: displayColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: displayColor, width: 2),
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(color: displayColor, width: 1.5),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -735,14 +721,14 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 2.h),
                     if (isDisabled) ...[
-                      Icon(Icons.warning, size: 16.sp, color: displayColor),
-                      SizedBox(height: 2.h),
+                      Icon(Icons.warning, size: 12.sp, color: displayColor),
+                      SizedBox(height: 1.h),
                       Text(
-                        'DISCONNECTED',
+                        'DISC',
                         style: TextStyle(
-                          fontSize: 8.sp,
+                          fontSize: 7.sp,
                           fontWeight: FontWeight.bold,
                           color: displayColor,
                         ),
@@ -752,7 +738,7 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
                       Text(
                         displayValue,
                         style: TextStyle(
-                          fontSize: 12.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.bold,
                           color: displayColor,
                         ),
