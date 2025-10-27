@@ -162,6 +162,7 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
                     SizedBox(width: 16.w),
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -174,16 +175,14 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
                           ),
                           if (_siloData != null) ...[
                             SizedBox(height: 4.h),
-                            Flexible(
-                              child: Text(
-                                '${_siloData!.siloGroup} • ${_siloData!.cableCount == 2 ? 'Circular' : 'Square'} • ${_siloData!.cableCount} Cable${_siloData!.cableCount != 1 ? 's' : ''}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Colors.white70,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                            Text(
+                              '${_siloData!.siloGroup} • ${_siloData!.cableCount == 2 ? 'Circular' : 'Square'} • ${_siloData!.cableCount} Cable${_siloData!.cableCount != 1 ? 's' : ''}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.white70,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ],
                         ],
@@ -495,8 +494,8 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
       border: TableBorder.all(color: Colors.grey.shade200, width: 1),
       columnWidths: {
         0: const FlexColumnWidth(1),
-        1: const FlexColumnWidth(2),
-        if (_siloData!.cableCount == 2) 2: const FlexColumnWidth(2),
+        1: const FlexColumnWidth(1.3),
+        if (_siloData!.cableCount == 2) 2: const FlexColumnWidth(1.3),
         (_siloData!.cableCount == 2 ? 3 : 2): const FlexColumnWidth(1),
       },
       children: [
@@ -563,7 +562,7 @@ class _MaintenanceCablePopupState extends State<MaintenanceCablePopup> {
         children: [
           if (color != null) ...[
             Container(
-              width: 8.w, // 35% smaller: 12 -> 7.8 ≈ 8
+              width: 4.w, // 35% smaller: 12 -> 7.8 ≈ 8
               height: 8.h, // 35% smaller: 12 -> 7.8 ≈ 8
               decoration: BoxDecoration(
                 color: color,

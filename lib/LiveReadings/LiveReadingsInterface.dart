@@ -308,36 +308,102 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             
             // Main content area - Paginated layout
             Expanded(
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_monitoringService, _autoTestController]),
-                builder: (context, child) {
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.all(8.w),
-                    child: Column(
-                      children: [
-                        // Monitoring status indicator
-                        _buildMonitoringStatusIndicator(),
-                        
-                        SizedBox(height: 16.h),
-                        
-                        // Current silo group with sensors and grain level panels
-                        _buildCurrentSiloGroup(),
-                        
-                        SizedBox(height: 24.h),
-                        
-                        // Group pagination at bottom
-                        GroupPaginationWidget(
-                          currentGroup: _autoTestController.currentGroupIndex,
-                          totalGroups: _autoTestController.totalGroups,
-                          onGroupChanged: (index) => _autoTestController.navigateToGroup(index),
-                          isAutoTestRunning: false, // No longer using auto test
-                        ),
-
-                        SizedBox(height: 16.h),
-                      ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(8.w),
+                child: Column(
+                  children: [
+                    // Monitoring status indicator - separate AnimatedBuilder with error boundary
+                    Builder(
+                      builder: (context) {
+                        try {
+                          return AnimatedBuilder(
+                            animation: _monitoringService,
+                            builder: (context, child) => _buildMonitoringStatusIndicator(),
+                          );
+                        } catch (e) {
+                          debugPrint('❌ [EMERGENCY] Monitoring status widget error: $e');
+                          return Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(color: Colors.orange.shade300, width: 2),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.warning, color: Colors.orange.shade800, size: 20.w),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  'Monitoring Service (Safe Mode)',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
                     ),
-                  );
-                },
+                    
+                    SizedBox(height: 16.h),
+                    
+                    // Current silo group with sensors and grain level panels - separate AnimatedBuilder with error boundary
+                    Builder(
+                      builder: (context) {
+                        try {
+                          return AnimatedBuilder(
+                            animation: _autoTestController,
+                            builder: (context, child) => _buildCurrentSiloGroup(),
+                          );
+                        } catch (e) {
+                          debugPrint('❌ [EMERGENCY] Silo group widget error: $e');
+                          return Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(color: Colors.red.shade300, width: 2),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error, color: Colors.red.shade800, size: 20.w),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  'Silo Display (Safe Mode)',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    
+                    SizedBox(height: 24.h),
+                    
+                    // Group pagination at bottom - separate AnimatedBuilder
+                    AnimatedBuilder(
+                      animation: _autoTestController,
+                      builder: (context, child) => GroupPaginationWidget(
+                        currentGroup: _autoTestController.currentGroupIndex,
+                        totalGroups: _autoTestController.totalGroups,
+                        onGroupChanged: (index) => _autoTestController.navigateToGroup(index),
+                        isAutoTestRunning: false, // No longer using auto test
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+                  ],
+                ),
               ),
             ),
           ],

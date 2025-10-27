@@ -19,6 +19,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
   // State
   Timer? _monitoringTimer;
   Timer? _initialScanTimer;
+  Timer? _notificationDebounceTimer;
   bool _isRunning = false;
   bool _isBatchChecking = false;
   bool _isInitialScanning = false;
@@ -26,6 +27,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
   DateTime? _lastBatchCheck;
   Map<int, SiloSensorData> _cachedSiloData = {};
   Map<int, DateTime> _lastUpdated = {};
+  bool _hasPendingNotification = false;
   
   // All silo numbers (195 silos total)
   final List<int> _allSilos = [
@@ -76,17 +78,16 @@ class AutomaticMonitoringService extends ChangeNotifier {
     _isRunning = true;
     debugPrint('🔄 [AUTO MONITOR] Starting automatic monitoring (3-minute intervals)');
     
-    // Start initial scan first (1 second per silo)
+    // Start initial scan on app launch
     _startInitialScan();
     
-    // Set up periodic timer for 3-minute intervals (starts after initial scan)
+    // Set up periodic timer for 3-minute intervals only
     _monitoringTimer = Timer.periodic(monitoringInterval, (timer) {
-      if (!_isInitialScanning) {
-        _performBatchCheck();
-      }
+      _performBatchCheck();
     });
     
-    notifyListeners();
+    // EMERGENCY FIX: Use debounced notification
+    _notifyListenersDebounced();
   }
   
   /// Stop automatic monitoring
@@ -95,11 +96,14 @@ class AutomaticMonitoringService extends ChangeNotifier {
     
     _monitoringTimer?.cancel();
     _initialScanTimer?.cancel();
+    _notificationDebounceTimer?.cancel();
     _monitoringTimer = null;
     _initialScanTimer = null;
+    _notificationDebounceTimer = null;
     _isRunning = false;
     _isBatchChecking = false;
     _isInitialScanning = false;
+    _hasPendingNotification = false;
     
     debugPrint('🛑 [AUTO MONITOR] Stopped automatic monitoring');
     notifyListeners();
@@ -116,7 +120,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
     final startTime = DateTime.now();
     
     debugPrint('🚀 [AUTO MONITOR] Starting batch check for ${_allSilos.length} silos');
-    notifyListeners();
+    _notifyListenersDebounced();
     
     try {
       // Use batch API endpoint for fast checking
@@ -139,7 +143,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
       debugPrint('❌ [AUTO MONITOR] Batch check failed after ${duration.inMilliseconds}ms: $e');
     } finally {
       _isBatchChecking = false;
-      notifyListeners();
+      _notifyListenersDebounced();
     }
   }
   
@@ -237,7 +241,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
         _lastUpdated[siloNumber] = DateTime.now();
         
         debugPrint('✅ [AUTO MONITOR] On-demand update completed for silo $siloNumber');
-        notifyListeners();
+        _notifyListenersDebounced();
         return data;
       } else {
         debugPrint('❌ [AUTO MONITOR] On-demand update failed for silo $siloNumber - no data');
@@ -295,7 +299,24 @@ class AutomaticMonitoringService extends ChangeNotifier {
     _cachedSiloData.clear();
     _lastUpdated.clear();
     debugPrint('🗑️ [AUTO MONITOR] Cache cleared');
-    notifyListeners();
+    _notifyListenersDebounced();
+  }
+  
+  /// Debounced notification to prevent excessive UI updates
+  void _notifyListenersDebounced() {
+    if (_hasPendingNotification) return;
+    
+    _hasPendingNotification = true;
+    _notificationDebounceTimer?.cancel();
+    _notificationDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _hasPendingNotification = false;
+      // EMERGENCY FIX: Wrap notifyListeners in try-catch to prevent crashes
+      try {
+        notifyListeners();
+      } catch (e) {
+        debugPrint('❌ [EMERGENCY] notifyListeners error prevented: $e');
+      }
+    });
   }
   
   /// Start initial scan (1 second per silo)
@@ -305,9 +326,9 @@ class AutomaticMonitoringService extends ChangeNotifier {
     _isInitialScanning = true;
     _currentInitialScanIndex = 0;
     
-    debugPrint('🚀 [INITIAL SCAN] Starting initial scan for ${_allSilos.length} silos (1s per silo)');
-    notifyListeners();
+    debugPrint('🚀 [INITIAL SCAN] Starting initial scan of ${_allSilos.length} silos (1s per silo)');
     
+    // Start scanning first silo
     _scanNextSiloInInitialScan();
   }
   
@@ -321,12 +342,15 @@ class AutomaticMonitoringService extends ChangeNotifier {
     final siloNumber = _allSilos[_currentInitialScanIndex];
     debugPrint('🔍 [INITIAL SCAN] Scanning silo $siloNumber (${_currentInitialScanIndex + 1}/${_allSilos.length})');
     
-    notifyListeners(); // Update UI to show current scanning silo
-    
     // Scan the silo
     _scanSiloInInitialScan(siloNumber).then((_) {
       // Move to next silo after 1 second
       _currentInitialScanIndex++;
+      
+      // Batch notifications every 5 silos to reduce rendering load
+      if (_currentInitialScanIndex % 5 == 0 || _currentInitialScanIndex >= _allSilos.length) {
+        notifyListeners(); // Update UI less frequently
+      }
       
       if (_isInitialScanning) {
         _initialScanTimer = Timer(const Duration(seconds: 1), () {
@@ -353,7 +377,7 @@ class AutomaticMonitoringService extends ChangeNotifier {
     }
   }
   
-  /// Complete initial scan and start regular monitoring
+  /// Complete initial scan and transition to regular monitoring
   void _completeInitialScan() {
     _isInitialScanning = false;
     _currentInitialScanIndex = 0;
@@ -364,12 +388,9 @@ class AutomaticMonitoringService extends ChangeNotifier {
     debugPrint('🏁 [INITIAL SCAN] Initial scan completed! Scanned $scannedCount/${_allSilos.length} silos');
     debugPrint('🔄 [AUTO MONITOR] Regular 3-minute monitoring will now begin');
     
-    notifyListeners();
-  }
-  
-  @override
-  void dispose() {
-    stopMonitoring();
-    super.dispose();
+    // Perform first batch check immediately after initial scan
+    _performBatchCheck();
+    
+    _notifyListenersDebounced();
   }
 }
