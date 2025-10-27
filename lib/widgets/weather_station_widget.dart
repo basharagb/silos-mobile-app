@@ -122,23 +122,35 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
                 
                 // Main Content
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     // Inside Temperature
-                    _buildTemperatureDisplay(
-                      'INSIDE',
-                      _weatherData?.insideTemp,
-                      Colors.green,
+                    Expanded(
+                      flex: 2,
+                      child: _buildTemperatureDisplay(
+                        'INSIDE',
+                        _weatherData?.insideTemp,
+                        Colors.green,
+                      ),
                     ),
                     
+                    SizedBox(width: 8.w),
+                    
                     // Cottage Window
-                    _buildCottageWindow(),
+                    Expanded(
+                      flex: 1,
+                      child: Center(child: _buildCottageWindow()),
+                    ),
+                    
+                    SizedBox(width: 8.w),
                     
                     // Outside Temperature
-                    _buildTemperatureDisplay(
-                      'OUTSIDE',
-                      _weatherData?.outsideTemp,
-                      Colors.blue,
+                    Expanded(
+                      flex: 2,
+                      child: _buildTemperatureDisplay(
+                        'OUTSIDE',
+                        _weatherData?.outsideTemp,
+                        Colors.blue,
+                      ),
                     ),
                   ],
                 ),
@@ -263,8 +275,8 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
 
   Widget _buildCottageWindow() {
     return Container(
-      width: 50.w,
-      height: 50.w,
+      width: 40.w,
+      height: 40.w,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -272,7 +284,7 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
           colors: [Color(0xFF81D4FA), Color(0xFF4FC3F7)],
         ),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: const Color(0xFF8D6E63), width: 3),
+        border: Border.all(color: const Color(0xFF8D6E63), width: 2.w),
       ),
       child: Stack(
         children: [
@@ -293,14 +305,14 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
           ),
           // Reflection effect
           Positioned(
-            top: 4.h,
-            left: 4.w,
+            top: 3.h,
+            left: 3.w,
             child: Container(
-              width: 12.w,
-              height: 12.w,
+              width: 8.w,
+              height: 8.w,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(4.r),
               ),
             ),
           ),
@@ -311,37 +323,39 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
 
   Widget _buildTemperatureDisplay(String label, double? temperature, Color color) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Label
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
           decoration: BoxDecoration(
             color: color.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(10.r),
           ),
           child: Text(
             label,
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 10.sp,
+              fontSize: 9.sp,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
         
-        SizedBox(height: 8.h),
+        SizedBox(height: 6.h),
         
         // Temperature display
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
           decoration: BoxDecoration(
             color: color.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(10.r),
             boxShadow: [
               BoxShadow(
                 color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -350,9 +364,10 @@ class _WeatherStationWidgetState extends State<WeatherStationWidget>
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 14.sp,
+              fontSize: 12.sp,
               fontFamily: 'monospace',
             ),
+            textAlign: TextAlign.center,
           ),
         ),
       ],

@@ -96,19 +96,27 @@ class _SplashPageState extends State<SplashPage>
 
   void _startSplashSequence() async {
     // Start logo animation
-    _logoController.forward();
+    if (mounted) {
+      _logoController.forward();
+    }
     
     // Start text animation after 500ms
     await Future.delayed(const Duration(milliseconds: 1500));
-    _textController.forward();
+    if (mounted) {
+      _textController.forward();
+    }
     
     // Start progress animation after 1000ms
     await Future.delayed(const Duration(milliseconds: 1500));
-    _progressController.forward();
+    if (mounted) {
+      _progressController.forward();
+    }
     
     // Check auth status after 3 seconds
     await Future.delayed(const Duration(milliseconds: 4000));
-    _checkAuthStatus();
+    if (mounted) {
+      _checkAuthStatus();
+    }
   }
 
   void _checkAuthStatus() {

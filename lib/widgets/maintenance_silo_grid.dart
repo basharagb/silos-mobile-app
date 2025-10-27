@@ -148,8 +148,8 @@ class _MaintenanceSiloGridState extends State<MaintenanceSiloGrid> {
       padding: EdgeInsets.all(8.w),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 5, // 5 silos per row (like React version)
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.h,
+        crossAxisSpacing: 8.w,
+        mainAxisSpacing: 8.h,
         childAspectRatio: 1.0,
       ),
       itemCount: silosInGroup.length,
@@ -200,7 +200,7 @@ class _MaintenanceSiloGridState extends State<MaintenanceSiloGrid> {
               child: Text(
                 siloNumber.toString(),
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
                   color: _getTextColor(siloColor),
                 ),
@@ -217,8 +217,8 @@ class _MaintenanceSiloGridState extends State<MaintenanceSiloGrid> {
                   ),
                   child: Center(
                     child: SizedBox(
-                      width: 24.w,
-                      height: 24.h,
+                      width: 20.w,
+                      height: 20.h,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -233,11 +233,11 @@ class _MaintenanceSiloGridState extends State<MaintenanceSiloGrid> {
             // Cable Status Indicator
             if (maintenanceData != null)
               Positioned(
-                top: 4.h,
-                right: 4.w,
+                top: 3.h,
+                right: 3.w,
                 child: Container(
-                  width: 12.w,
-                  height: 12.h,
+                  width: 10.w,
+                  height: 10.h,
                   decoration: BoxDecoration(
                     color: _getCableStatusColor(maintenanceData),
                     shape: BoxShape.circle,
@@ -248,18 +248,18 @@ class _MaintenanceSiloGridState extends State<MaintenanceSiloGrid> {
             
             // Silo Type Indicator (Circular vs Square)
             Positioned(
-              bottom: 4.h,
-              left: 4.w,
+              bottom: 2.h,
+              left: 2.w,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
                   _getSiloType(siloNumber),
                   style: TextStyle(
-                    fontSize: 8.sp,
+                    fontSize: 7.sp,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
