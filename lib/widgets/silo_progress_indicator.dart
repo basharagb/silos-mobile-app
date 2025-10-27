@@ -109,19 +109,20 @@ class _SiloProgressIndicatorState extends State<SiloProgressIndicator>
   }
 
   Color _getSiloColor() {
-    switch (widget.state) {
-      case SiloProgressState.scanning:
-        return Colors.blue;
-      case SiloProgressState.retry:
-        return Colors.orange;
-      case SiloProgressState.completed:
-        return Colors.green;
-      case SiloProgressState.disconnected:
-        return Colors.red;
-      case SiloProgressState.idle:
-      default:
-        return widget.siloColor ?? const Color(0xFFF6E2A1);
+    // Show blue color during scanning for visual feedback
+    if (widget.state == SiloProgressState.scanning) {
+      return Colors.blue;
     }
+    
+    // Otherwise use the provided silo color (API color for scanned, wheat for unscanned)
+    return widget.siloColor ?? const Color(0xFFF6E2A1); // Default wheat color
+  }
+  
+  Color _getContrastingTextColor() {
+    final siloColor = _getSiloColor();
+    // Calculate luminance to determine if we need light or dark text
+    final luminance = siloColor.computeLuminance();
+    return luminance > 0.5 ? Colors.black87 : Colors.white;
   }
 
   Color _getProgressColor() {
@@ -168,13 +169,13 @@ class _SiloProgressIndicatorState extends State<SiloProgressIndicator>
     
     switch (widget.state) {
       case SiloProgressState.completed:
-        // Show silo number for completed silos (not check icon)
+        // Show silo number for completed silos with contrasting color
         icon = Text(
           widget.siloNumber.toString(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 12.sp,
-            color: Colors.white,
+            color: _getContrastingTextColor(),
           ),
         );
         break;
@@ -187,17 +188,18 @@ class _SiloProgressIndicatorState extends State<SiloProgressIndicator>
         break;
       case SiloProgressState.scanning:
       case SiloProgressState.retry:
-        // Show silo number during scanning (like React implementation)
+        // Show silo number during scanning
         icon = Text(
           widget.siloNumber.toString(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 12.sp,
-            color: Colors.white,
+            color: Colors.white, // White text for scanning (blue background)
           ),
         );
         break;
       case SiloProgressState.idle:
+        // Unscanned silo with wheat color - use dark text
         icon = Text(
           widget.siloNumber.toString(),
           style: TextStyle(

@@ -29,6 +29,9 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   // Silo data cache (now managed by monitoring service)
   final Map<int, SiloSensorData> _siloDataCache = {};
   
+  // Scanning state management
+  final Set<int> _scanningSilos = {};
+  
   @override
   void initState() {
     super.initState();
@@ -89,39 +92,33 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   }
 
   Color getSiloColor(int num) {
-    // Check if monitoring service has cached data
+    // Check if monitoring service has cached data (scanned silos)
     final cachedData = _monitoringService.getCachedSiloData(num);
     
     if (cachedData != null) {
+      // Scanned silo - use API color
       try {
-        // Use API silo color if available
         final colorHex = cachedData.siloColor;
-        if (colorHex.isNotEmpty && colorHex != ApiService.wheatColor) {
+        if (colorHex.isNotEmpty) {
           return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
         }
       } catch (e) {
-        // Fall back to temperature-based color
-      }
-      
-      // Temperature-based color logic when API color is not available
-      if (cachedData.maxTemp <= 0 || cachedData.maxTemp == -127.0) {
-        return Colors.grey; // Disconnected
-      } else if (cachedData.maxTemp < 30) {
-        return Colors.green; // Normal
-      } else if (cachedData.maxTemp < 40) {
-        return Colors.orange; // Warning
-      } else {
-        return Colors.red; // Critical
+        // If API color parsing fails, use wheat color
       }
     }
     
-    // Check if silo is known to be disconnected
-    if (_monitoringService.isSiloDisconnected(num)) {
-      return Colors.grey;
-    }
-    
-    // Default wheat color when no data available
+    // Unscanned silo - always use wheat color (yellowish like wheat grain)
     return Color(int.parse(ApiService.wheatColor.replaceFirst('#', '0xFF')));
+  }
+  
+  /// Check if silo has been scanned (has cached data)
+  bool isSiloScanned(int num) {
+    return _monitoringService.getCachedSiloData(num) != null;
+  }
+  
+  /// Check if silo is currently being scanned
+  bool isSiloScanning(int num) {
+    return _scanningSilos.contains(num);
   }
 
   bool isSquare(int num) {
@@ -152,17 +149,29 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   Future<void> _updateSiloOnDemand(int siloNumber) async {
     print('🎯 [LIVE READINGS] On-demand update for silo $siloNumber');
     
-    // Use monitoring service for on-demand updates
-    final data = await _monitoringService.updateSiloOnDemand(siloNumber);
+    // Mark silo as scanning and show progress indicator
+    setState(() {
+      _scanningSilos.add(siloNumber);
+    });
     
-    if (data != null) {
-      // Update local cache as well for compatibility
+    try {
+      // Use monitoring service for on-demand updates
+      final data = await _monitoringService.updateSiloOnDemand(siloNumber);
+      
+      if (data != null) {
+        // Update local cache as well for compatibility
+        setState(() {
+          _siloDataCache[siloNumber] = data;
+        });
+        print('✅ [LIVE READINGS] On-demand update completed for silo $siloNumber');
+      } else {
+        print('❌ [LIVE READINGS] On-demand update failed for silo $siloNumber');
+      }
+    } finally {
+      // Remove scanning state
       setState(() {
-        _siloDataCache[siloNumber] = data;
+        _scanningSilos.remove(siloNumber);
       });
-      print('✅ [LIVE READINGS] On-demand update completed for silo $siloNumber');
-    } else {
-      print('❌ [LIVE READINGS] On-demand update failed for silo $siloNumber');
     }
   }
 
@@ -576,13 +585,22 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             children: row.map((num) {
               bool square = isSquare(num);
               
-              // Simplified progress state - no more complex auto test states
+              // Determine silo state based on scanning and cached data
               SiloProgressState progressState = SiloProgressState.idle;
               double progress = 0.0;
               
-              // Check if silo is disconnected
-              if (_monitoringService.isSiloDisconnected(num)) {
-                progressState = SiloProgressState.disconnected;
+              // Check if silo is currently being scanned
+              if (isSiloScanning(num)) {
+                progressState = SiloProgressState.scanning;
+                progress = 0.5; // Show scanning progress
+              } else if (isSiloScanned(num)) {
+                // Silo has been scanned and has cached data
+                progressState = SiloProgressState.completed;
+                progress = 1.0;
+              } else {
+                // Unscanned silo - show as idle with wheat color
+                progressState = SiloProgressState.idle;
+                progress = 0.0;
               }
               
               return SiloProgressIndicator(
