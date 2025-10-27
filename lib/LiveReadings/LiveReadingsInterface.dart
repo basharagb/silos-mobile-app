@@ -309,7 +309,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             // Main content area - Paginated layout
             Expanded(
               child: AnimatedBuilder(
-                animation: _monitoringService,
+                animation: Listenable.merge([_monitoringService, _autoTestController]),
                 builder: (context, child) {
                   return SingleChildScrollView(
                     padding: EdgeInsets.all(8.w),

@@ -155,7 +155,10 @@ class GroupPaginationWidget extends StatelessWidget {
             children: [
               // Previous button
               IconButton(
-                onPressed: currentGroup > 0 ? () => onGroupChanged(currentGroup - 1) : null,
+                onPressed: currentGroup > 0 ? () {
+                  print('⬅️ [PAGINATION] Previous button tapped (${currentGroup - 1})');
+                  onGroupChanged(currentGroup - 1);
+                } : null,
                 icon: Icon(
                   Icons.chevron_left,
                   color: currentGroup > 0 ? Colors.blue : Colors.grey,
@@ -230,7 +233,10 @@ class GroupPaginationWidget extends StatelessWidget {
               // Next button
               IconButton(
                 onPressed: currentGroup < totalGroups - 1 
-                    ? () => onGroupChanged(currentGroup + 1) 
+                    ? () {
+                        print('➡️ [PAGINATION] Next button tapped (${currentGroup + 1})');
+                        onGroupChanged(currentGroup + 1);
+                      }
                     : null,
                 icon: Icon(
                   Icons.chevron_right,
@@ -326,7 +332,10 @@ class GroupPaginationWidget extends StatelessWidget {
     final isActive = pageIndex == currentGroup;
     
     return GestureDetector(
-      onTap: () => onGroupChanged(pageIndex),
+      onTap: () {
+        print('🔘 [PAGINATION] Page button $pageNumber (index $pageIndex) tapped');
+        onGroupChanged(pageIndex);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 32.w,
@@ -379,7 +388,10 @@ class GroupPaginationWidget extends StatelessWidget {
 
   Widget _buildQuickNavButton(String label, int targetGroup, bool enabled) {
     return TextButton(
-      onPressed: enabled ? () => onGroupChanged(targetGroup) : null,
+      onPressed: enabled ? () {
+        print('🏁 [PAGINATION] Quick nav "$label" tapped (group $targetGroup)');
+        onGroupChanged(targetGroup);
+      } : null,
       style: TextButton.styleFrom(
         foregroundColor: enabled ? Colors.blue : Colors.grey,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),

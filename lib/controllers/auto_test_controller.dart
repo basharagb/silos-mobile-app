@@ -472,9 +472,13 @@ class AutoTestController extends ChangeNotifier {
 
   // Navigate to specific group page
   void navigateToGroup(int groupIndex) {
+    print('📱 [NAVIGATION] Navigating to group $groupIndex (current: $_currentGroupIndex)');
     if (groupIndex >= 0 && groupIndex < _siloGroups.length) {
       _currentGroupIndex = groupIndex;
+      print('✅ [NAVIGATION] Group changed to $_currentGroupIndex');
       notifyListeners();
+    } else {
+      print('❌ [NAVIGATION] Invalid group index: $groupIndex (max: ${_siloGroups.length - 1})');
     }
   }
 
