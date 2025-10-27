@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
+import '../services/api_service.dart';
 
 enum SiloProgressState {
   idle,
@@ -115,7 +116,13 @@ class _SiloProgressIndicatorState extends State<SiloProgressIndicator>
     }
     
     // Otherwise use the provided silo color (API color for scanned, wheat for unscanned)
-    return widget.siloColor ?? const Color(0xFFF6E2A1); // Default wheat color
+    if (widget.siloColor != null) {
+      return widget.siloColor!;
+    }
+    
+    // Default wheat color (yellowish like wheat grain)
+    final cleanWheatHex = ApiService.wheatColor.replaceAll('#', '');
+    return Color(int.parse('FF$cleanWheatHex', radix: 16));
   }
   
   Color _getContrastingTextColor() {

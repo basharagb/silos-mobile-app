@@ -6,6 +6,7 @@ import '../widgets/group_pagination_widget.dart';
 import '../widgets/silo_progress_indicator.dart';
 import '../controllers/auto_test_controller.dart';
 import '../services/maintenance_api_service.dart';
+import '../services/api_service.dart';
 
 class MaintenancePage extends StatefulWidget {
   const MaintenancePage({super.key});
@@ -112,7 +113,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
       return Colors.blue.shade400;
     } else {
       // Unscanned silo - wheat color (yellowish like wheat grain)
-      return const Color(0xFFDEB887); // BurlyWood color (wheat-like)
+      final cleanWheatHex = ApiService.wheatColor.replaceAll('#', '');
+      return Color(int.parse('FF$cleanWheatHex', radix: 16));
     }
   }
 
