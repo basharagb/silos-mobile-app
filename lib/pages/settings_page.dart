@@ -97,11 +97,11 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             // Header with weather station
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(8.w),
-              child: const WeatherStationWidget(),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: EdgeInsets.all(8.w),
+            //   child: const WeatherStationWidget(),
+            // ),
             
             // Settings content
             Expanded(

@@ -24,7 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
     LiveReadingsInterface(),
     const AlertSiloMonitoringPage(),
     const MaintenancePage(),
-    const SettingsPage(),
+    SettingsPage(),
   ];
 
   final List<BottomNavigationBarItem> _bottomNavItems = [
