@@ -10,6 +10,7 @@ import '../widgets/group_pagination_widget.dart';
 import '../controllers/test_controller.dart';
 import '../controllers/auto_test_controller.dart';
 import '../services/api_service.dart';
+import '../services/automatic_monitoring_service.dart';
 
 class LiveReadingsInterface extends StatefulWidget {
   const LiveReadingsInterface({super.key});
@@ -21,23 +22,32 @@ class LiveReadingsInterface extends StatefulWidget {
 class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   late TestController _testController;
   late AutoTestController _autoTestController;
+  late AutomaticMonitoringService _monitoringService;
   int _selectedSilo = 112;
   final TextEditingController _siloInputController = TextEditingController();
   
-  // Silo data cache
+  // Silo data cache (now managed by monitoring service)
   final Map<int, SiloSensorData> _siloDataCache = {};
+  
+  // Scanning state management
+  final Set<int> _scanningSilos = {};
   
   @override
   void initState() {
     super.initState();
     _testController = TestController();
     _autoTestController = AutoTestController();
+    _monitoringService = AutomaticMonitoringService();
     _siloInputController.text = _selectedSilo.toString();
     _initializeControllers();
   }
   
   Future<void> _initializeControllers() async {
     await _autoTestController.initialize();
+    
+    // Start automatic monitoring service
+    _monitoringService.startMonitoring();
+    
     await _loadInitialData();
   }
   
@@ -82,75 +92,43 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   }
 
   Color getSiloColor(int num) {
-    // During auto test, check silo state
-    if (_autoTestController.isRunning) {
-      if (_autoTestController.isSiloScanning(num)) {
-        // Currently scanning silo - use blue color
-        return Colors.blue;
-      } else {
-        // For any silo during auto test, check if we have fresh API data from manual clicks
-        final cachedData = _siloDataCache[num];
-        if (cachedData != null) {
-          try {
-            final colorHex = cachedData.siloColor;
-            if (colorHex.isNotEmpty && colorHex != ApiService.wheatColor) {
-              print('🎨 [LIVE READINGS] Using fresh API color during auto test for silo $num: $colorHex');
-              return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
-            }
-          } catch (e) {
-            // Fall back to temperature-based color
-          }
-          
-          // Temperature-based color logic
-          if (cachedData.maxTemp <= 0 || cachedData.maxTemp == -127.0) {
-            return Colors.grey; // Disconnected
-          } else if (cachedData.maxTemp < 30) {
-            return Colors.green; // Normal
-          } else if (cachedData.maxTemp < 40) {
-            return Colors.orange; // Warning
-          } else {
-            return Colors.red; // Critical
-          }
-        }
-      }
-      
-      // Check if silo is disconnected
-      if (_autoTestController.isSiloDisconnected(num)) {
-        return Colors.red;
-      }
-      
-      // Unscanned silo during auto test - use wheat color
-      return Color(int.parse(ApiService.wheatColor.replaceFirst('#', '0xFF')));
-    }
+    // Check if monitoring service has cached data (scanned silos)
+    final cachedData = _monitoringService.getCachedSiloData(num);
     
-    // Normal operation (not during auto test)
-    final cachedData = _siloDataCache[num];
     if (cachedData != null) {
+      // Scanned silo - use API color
       try {
-        // Use API silo color if available
         final colorHex = cachedData.siloColor;
-        if (colorHex.isNotEmpty && colorHex != ApiService.wheatColor) {
-          print('🎨 [LIVE READINGS] Using API color for silo $num: $colorHex');
+        if (colorHex.isNotEmpty) {
           return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
         }
       } catch (e) {
-        // Fall back to temperature-based color
-      }
-      
-      // Temperature-based color logic when API color is not available
-      if (cachedData.maxTemp <= 0 || cachedData.maxTemp == -127.0) {
-        return Colors.grey; // Disconnected
-      } else if (cachedData.maxTemp < 30) {
-        return Colors.green; // Normal
-      } else if (cachedData.maxTemp < 40) {
-        return Colors.orange; // Warning
-      } else {
-        return Colors.red; // Critical
+        // If API color parsing fails, use wheat color
       }
     }
     
-    // Default wheat color when no data available
+    // Unscanned silo - always use wheat color (yellowish like wheat grain)
     return Color(int.parse(ApiService.wheatColor.replaceFirst('#', '0xFF')));
+  }
+  
+  /// Check if silo has been scanned (has cached data)
+  bool isSiloScanned(int num) {
+    return _monitoringService.getCachedSiloData(num) != null;
+  }
+  
+  /// Check if silo is currently being scanned
+  bool isSiloScanning(int num) {
+    // Check if it's being scanned manually
+    if (_scanningSilos.contains(num)) {
+      return true;
+    }
+    
+    // Check if it's being scanned in initial scan
+    if (_monitoringService.isInitialScanning) {
+      return _monitoringService.currentInitialScanSilo == num;
+    }
+    
+    return false;
   }
 
   bool isSquare(int num) {
@@ -171,55 +149,40 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       _siloInputController.text = siloNumber.toString();
     });
     
-    // Show silo details popup (always show, even during auto test)
+    // Show silo details popup
     _showSiloDetailsPopup(siloNumber);
     
-    // Always load fresh data and update colors, but handle scanning differently
-    if (!_autoTestController.isRunning) {
-      print('📱 [LIVE READINGS] Manual click on silo $siloNumber - starting scan');
-      _startSiloScan(siloNumber);
-    } else {
-      print('🔄 [LIVE READINGS] Auto test is running - updating colors for silo $siloNumber');
-      // Load fresh data and update colors without interfering with auto test
-      _loadSiloDataAndUpdateColor(siloNumber);
-    }
-    
-    // Handle test mode
-    if (_testController.currentMode == TestMode.manual && !_testController.isRunning) {
-      _testController.startManualTest(siloNumber);
-    }
+    // Trigger on-demand update for this silo
+    _updateSiloOnDemand(siloNumber);
   }
 
-  Future<void> _startSiloScan(int siloNumber) async {
-    // Only allow manual scanning if auto test is NOT running
-    if (_autoTestController.isRunning) {
-      print('⚠️ [LIVE READINGS] Auto test is running - ignoring manual scan request for silo $siloNumber');
-      return;
+  Future<void> _updateSiloOnDemand(int siloNumber) async {
+    print('🎯 [LIVE READINGS] On-demand update for silo $siloNumber');
+    
+    // Mark silo as scanning and show progress indicator
+    setState(() {
+      _scanningSilos.add(siloNumber);
+    });
+    
+    try {
+      // Use monitoring service for on-demand updates
+      final data = await _monitoringService.updateSiloOnDemand(siloNumber);
+      
+      if (data != null) {
+        // Update local cache as well for compatibility
+        setState(() {
+          _siloDataCache[siloNumber] = data;
+        });
+        print('✅ [LIVE READINGS] On-demand update completed for silo $siloNumber');
+      } else {
+        print('❌ [LIVE READINGS] On-demand update failed for silo $siloNumber');
+      }
+    } finally {
+      // Remove scanning state
+      setState(() {
+        _scanningSilos.remove(siloNumber);
+      });
     }
-    
-    print('🔵 [LIVE READINGS] Starting manual scan for silo $siloNumber');
-    
-    // Mark silo as scanning (will show blue color)
-    _autoTestController.setSiloScanning(siloNumber);
-    setState(() {}); // Trigger UI update to show blue color
-    
-    // Simulate scanning delay (like real hardware scan)
-    await Future.delayed(const Duration(milliseconds: 1500));
-    
-    // Double-check auto test hasn't started during our scan
-    if (_autoTestController.isRunning) {
-      print('⚠️ [LIVE READINGS] Auto test started during manual scan - aborting manual scan');
-      return;
-    }
-    
-    // Fetch fresh API data during scan
-    await _loadSiloData(siloNumber);
-    
-    // Mark silo as completed (will show API color)
-    _autoTestController.setSiloCompleted(siloNumber);
-    setState(() {}); // Trigger UI update to show API color
-    
-    print('✅ [LIVE READINGS] Manual scan completed for silo $siloNumber');
   }
 
   void _showSiloDetailsPopup(int siloNumber) {
@@ -325,6 +288,7 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     _testController.dispose();
     _autoTestController.dispose();
     _siloInputController.dispose();
+    // Note: Don't dispose monitoring service as it's a singleton
     super.dispose();
   }
 
@@ -345,26 +309,16 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             // Main content area - Paginated layout
             Expanded(
               child: AnimatedBuilder(
-                animation: _autoTestController,
+                animation: _monitoringService,
                 builder: (context, child) {
                   return SingleChildScrollView(
                     padding: EdgeInsets.all(8.w),
                     child: Column(
                       children: [
-                        // Control panel at top
-
+                        // Monitoring status indicator
+                        _buildMonitoringStatusIndicator(),
                         
-                        // Auto test progress bar
-                        if (_autoTestController.isRunning)
-                          GroupProgressBar(
-                            currentGroup: _autoTestController.currentGroupIndex,
-                            totalGroups: _autoTestController.totalGroups,
-                            overallProgress: _autoTestController.progress,
-                            isRetryPhase: _autoTestController.isRetryPhase,
-                          ),
-                        
-                        if (_autoTestController.isRunning)
-                          SizedBox(height: 16.h),
+                        SizedBox(height: 16.h),
                         
                         // Current silo group with sensors and grain level panels
                         _buildCurrentSiloGroup(),
@@ -376,9 +330,8 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
                           currentGroup: _autoTestController.currentGroupIndex,
                           totalGroups: _autoTestController.totalGroups,
                           onGroupChanged: (index) => _autoTestController.navigateToGroup(index),
-                          isAutoTestRunning: _autoTestController.isRunning,
+                          isAutoTestRunning: false, // No longer using auto test
                         ),
-                        _buildControlPanel(),
 
                         SizedBox(height: 16.h),
                       ],
@@ -393,16 +346,27 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     );
   }
 
-  Widget _buildControlPanel() {
+  Widget _buildMonitoringStatusIndicator() {
+    final stats = _monitoringService.getMonitoringStats();
+    final isRunning = _monitoringService.isRunning;
+    final isBatchChecking = _monitoringService.isBatchChecking;
+    final isInitialScanning = _monitoringService.isInitialScanning;
+    final currentInitialScanIndex = _monitoringService.currentInitialScanIndex;
+    final currentInitialScanSilo = _monitoringService.currentInitialScanSilo;
+    final lastCheck = _monitoringService.lastBatchCheck;
+    
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.blue.shade300, width: 2),
+        border: Border.all(
+          color: isRunning ? Colors.green.shade300 : Colors.grey.shade300, 
+          width: 2
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.2),
+            color: (isRunning ? Colors.green : Colors.grey).withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -410,170 +374,165 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
       ),
       child: Column(
         children: [
-          // Title
-          Text(
-            'Test Controls',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
+          // Title with status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isInitialScanning ? Icons.scanner : (isRunning ? Icons.autorenew : Icons.pause_circle_outline),
+                color: isInitialScanning ? Colors.blue : (isRunning ? Colors.green : Colors.grey),
+                size: 20.w,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                isInitialScanning ? 'Initial Scan' : 'Automatic Monitoring',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isInitialScanning ? Colors.blue.shade800 : (isRunning ? Colors.green.shade800 : Colors.grey.shade600),
+                ),
+              ),
+              if (isBatchChecking || isInitialScanning) ...[
+                SizedBox(width: 8.w),
+                SizedBox(
+                  width: 16.w,
+                  height: 16.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(isInitialScanning ? Colors.blue : Colors.green),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          
+          SizedBox(height: 12.h),
+          
+          // Status info
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (isInitialScanning) ...[
+                _buildStatusItem(
+                  'Progress',
+                  '${currentInitialScanIndex}/${stats['totalSilos']}',
+                  Icons.trending_up,
+                  Colors.blue,
+                ),
+                _buildStatusItem(
+                  'Current',
+                  currentInitialScanSilo?.toString() ?? '-',
+                  Icons.gps_fixed,
+                  Colors.orange,
+                ),
+                _buildStatusItem(
+                  'Speed',
+                  '1s/silo',
+                  Icons.speed,
+                  Colors.green,
+                ),
+              ] else ...[
+                _buildStatusItem(
+                  'Interval',
+                  '3 min',
+                  Icons.timer,
+                  Colors.blue,
+                ),
+                _buildStatusItem(
+                  'Cached',
+                  '${stats['cachedSilos']}/${stats['totalSilos']}',
+                  Icons.storage,
+                  Colors.orange,
+                ),
+                _buildStatusItem(
+                  'Fresh',
+                  '${stats['freshSilos']}',
+                  Icons.refresh,
+                  Colors.green,
+                ),
+              ],
+            ],
+          ),
+          
+          if (lastCheck != null) ...[
+            SizedBox(height: 8.h),
+            Text(
+              'Last check: ${_formatLastCheck(lastCheck)}',
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: Colors.grey.shade600,
+              ),
             ),
-          ),
+          ],
           
-          SizedBox(height: 16.h),
-          
-
-          
-          SizedBox(height: 16.h),
-          
-          // Test buttons
-          ListenableBuilder(
-            listenable: _testController,
-            builder: (context, child) {
-              return Column(
-                children: [
-                  // Manual test button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _testController.isRunning && _testController.currentMode == TestMode.auto
-                          ? null
-                          : () {
-                              if (_testController.currentMode == TestMode.manual) {
-                                _testController.stopTest();
-                              } else {
-                                _testController.toggleManualMode();
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _testController.currentMode == TestMode.manual
-                            ? Colors.orange
-                            : Colors.blue,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                      ),
-                      child: Text(
-                        _testController.currentMode == TestMode.manual
-                            ? 'Stop Manual (3s)'
-                            : 'Manual Readings (3s)',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  SizedBox(height: 8.h),
-                  
-                  // Auto test button
-                  SizedBox(
-                    width: double.infinity,
-                    child: AnimatedBuilder(
-                      animation: _autoTestController,
-                      builder: (context, child) {
-                        return ElevatedButton(
-                          onPressed: () async {
-                            if (_autoTestController.isRunning) {
-                              await _autoTestController.stopAutoTest();
-                            } else {
-                              await _autoTestController.startAutoTest();
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _autoTestController.isRunning
-                                ? Colors.red
-                                : Colors.green,
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_autoTestController.isRunning) ...[
-                                SizedBox(
-                                  width: 16.w,
-                                  height: 16.w,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                ),
-                                SizedBox(width: 8.w),
-                              ],
-                              Text(
-                                _autoTestController.isRunning
-                                    ? _autoTestController.isRetryPhase
-                                        ? 'Stop Auto Test (Retry ${_autoTestController.retryCount}/${_autoTestController.maxRetries})'
-                                        : 'Stop Auto Test (${_autoTestController.progress.toStringAsFixed(1)}%)'
-                                    : 'Start Auto Test (24s per silo)',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  
-                  SizedBox(height: 12.h),
-                  
-                  // Progress indicator
-                  if (_testController.isRunning) ...[
-                    LinearProgressIndicator(
-                      value: _testController.progress / 100,
-                      backgroundColor: Colors.grey.shade300,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _testController.isRetryPhase ? Colors.orange : Colors.green,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      '${_testController.progress.toStringAsFixed(1)}% - ${_testController.status}',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                  
-                  // Disconnected silos info
-                  if (_testController.disconnectedSilos.isNotEmpty) ...[
-                    SizedBox(height: 8.h),
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(6.r),
-                        border: Border.all(color: Colors.orange.shade300),
-                      ),
-                      child: Text(
-                        'Disconnected: ${_testController.disconnectedSilos.length} silos',
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: Colors.orange.shade800,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
+          if (isInitialScanning) ...[
+            SizedBox(height: 8.h),
+            // Progress bar for initial scan
+            LinearProgressIndicator(
+              value: currentInitialScanIndex / stats['totalSilos'],
+              backgroundColor: Colors.blue.shade100,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Scanning silo ${currentInitialScanSilo ?? '...'} (${currentInitialScanIndex}/${stats['totalSilos']})',
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: Colors.blue.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ] else if (isBatchChecking) ...[
+            SizedBox(height: 8.h),
+            Text(
+              'Checking all silos...',
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: Colors.green.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+  
+  Widget _buildStatusItem(String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 16.w),
+        SizedBox(height: 4.h),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9.sp,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  String _formatLastCheck(DateTime lastCheck) {
+    final now = DateTime.now();
+    final diff = now.difference(lastCheck);
+    
+    if (diff.inMinutes < 1) {
+      return 'Just now';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    } else {
+      return '${diff.inHours}h ${diff.inMinutes % 60}m ago';
+    }
   }
 
   Widget _buildSiloGroupWithPanels(String groupName, List<List<int>> groups, List<int> siloNumbers) {
@@ -677,20 +636,22 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             children: row.map((num) {
               bool square = isSquare(num);
               
-              // Auto test progress state
+              // Determine silo state based on scanning and cached data
               SiloProgressState progressState = SiloProgressState.idle;
               double progress = 0.0;
               
-              if (_autoTestController.isSiloScanning(num)) {
-                progressState = _autoTestController.isRetryPhase 
-                    ? SiloProgressState.retry 
-                    : SiloProgressState.scanning;
-                progress = _autoTestController.getSiloProgress(num);
-              } else if (_autoTestController.isSiloCompleted(num)) {
+              // Check if silo is currently being scanned
+              if (isSiloScanning(num)) {
+                progressState = SiloProgressState.scanning;
+                progress = 0.5; // Show scanning progress
+              } else if (isSiloScanned(num)) {
+                // Silo has been scanned and has cached data
                 progressState = SiloProgressState.completed;
                 progress = 1.0;
-              } else if (_autoTestController.isSiloDisconnected(num)) {
-                progressState = SiloProgressState.disconnected;
+              } else {
+                // Unscanned silo - show as idle with wheat color
+                progressState = SiloProgressState.idle;
+                progress = 0.0;
               }
               
               return SiloProgressIndicator(

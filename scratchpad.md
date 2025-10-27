@@ -74,41 +74,98 @@ Implement auto-test functionality that:
 **Commit:** 71f56f7 - "feat: Implement auto-test with pagination and progress indicators"
 **PR:** https://github.com/basharagb/silos-mobile/pull/new/feature/auto-test-pagination-progress
 
-## NEW TASK: Animated Actions and API Colors
+## NEW TASK: Automatic Monitoring System with 3-Minute Intervals
 
 ### Task Description
-Implement animated actions for grain level and silo sensors with API-based colors:
-- Add animated actions to grain level display (pouring animation)
-- Add animated actions to silo sensors (reading animation with blue overlay)
-- Implement API-based silo colors instead of hardcoded colors
-- Move pagination navigation to bottom under groups
-- Add real-time sensor color updates from API
+Implement an automatic monitoring system that:
+- Performs automatic checks every 3 minutes for all silos
+- Completes all silo checks in less than 3 seconds (fast batch checking)
+- Caches silo colors and readings automatically
+- Updates individual silo data when clicked (on-demand updates)
+- Removes manual/automatic check buttons (unified system)
+- Maintains real-time visual feedback
 
-### Analysis from React Implementation
-- GrainLevelCylinder shows pouring animation during readings with yellow gradient
-- LabCylinder shows blue overlay and pulsing text during readings
-- Silo colors come from API response (silo_color field)
-- Sensor colors come from API (color_0 to color_7 fields)
-- Animations use CSS transitions and pulse effects
-- API provides both individual sensor colors and overall silo color
+### Current System Analysis ✅
+- **API Structure**: Uses `ApiService.getSiloSensorData()` with 10s timeout, returns `SiloSensorData` with sensors, colors, maxTemp
+- **Caching**: `_siloDataCache` Map<int, SiloSensorData> in LiveReadingsInterface, AlertsCache for alerts (1 hour cache)
+- **Auto-test**: `AutoTestController` scans 195 silos sequentially with 24s per silo (total ~78 minutes)
+- **Manual checks**: Individual silo scanning with 1.5s delay, shows blue color during scan
+- **Current Issues**:
+  - Auto-test takes 78 minutes (too slow)
+  - Manual/auto buttons exist (need to remove)
+  - No 3-minute interval system
+  - Sequential scanning instead of batch checking
 
 ### Task Plan
-- [x] Create new branch for animated actions feature
-- [x] Update API service to fetch silo and sensor colors
-- [x] Implement animated grain level with pouring effects
-- [x] Add animated sensor readings with blue overlay
-- [x] Update silo colors to use API data
-- [x] Move pagination navigation to bottom
-- [x] Add real-time color updates
-- [x] Test animations and API integration
+- [x] Create new branch for automatic monitoring feature
+- [x] Analyze current system architecture and API structure
+- [x] Understand existing caching mechanisms
+- [x] Design fast batch checking system (< 3 seconds for all silos)
+- [x] Implement 3-minute automatic interval system
+- [x] Implement on-demand silo updates when clicked
+- [x] Remove manual/automatic check buttons
+- [x] Update caching strategy for colors and readings
+- [x] Test performance and timing requirements
 - [x] Write unit tests
 - [x] Commit changes and create PR
 
 ### ✅ TASK COMPLETED SUCCESSFULLY
 
-**Branch:** `feature/animated-actions-api-colors`
-**Commit:** cd2218f - "feat: Add animated actions and API-based colors"
-**PR:** https://github.com/basharagb/silos-mobile/pull/new/feature/animated-actions-api-colors
+**Branch:** `feature/automatic-monitoring-3min`
+**Latest Commit:** 5a03675 - "feat: Add initial scan on app launch with 1-second intervals"
+**PR:** https://github.com/basharagb/silos-mobile-app/pull/new/feature/automatic-monitoring-3min
+
+### ✅ FINAL SILO DISPLAY LOGIC IMPLEMENTED
+
+**Silo Color Logic (As Requested):**
+- **Unscanned Silos**: Wheat color (yellowish like wheat grain) with silo number
+- **Scanned Silos**: API color with silo number
+- **Scanning State**: Blue color with circular progress indicator and pulsing animation
+- **On-Click**: Calls API, updates values, shows scanning process with visual indicators
+
+**Visual Feedback:**
+- Circular progress ring during scanning
+- Pulsing animation for scanning silos
+- Smart text contrast (auto-adjusts based on background color)
+- Status indicator dots for different states
+- Smooth color transitions
+
+### ✅ INITIAL SCAN ON APP LAUNCH IMPLEMENTED
+
+**Initial Scan Features:**
+- **Auto-start**: Begins automatically after login/app launch
+- **Sequential Scanning**: 1 second per silo (195 silos total)
+- **Real-time Progress**: Shows current silo being scanned
+- **Visual Indicators**: Blue scanner icon, progress bar, completion counter
+- **Seamless Transition**: Switches to 3-minute monitoring after completion
+
+**Scan Process:**
+1. App launches → Splash screen
+2. Login/Authentication
+3. Live Readings opens
+4. Initial scan starts immediately (1s per silo)
+5. Shows scanning progress with visual feedback
+6. After scan completes → Regular 3-minute monitoring begins
+
+### ✅ IMPLEMENTATION COMPLETED
+
+**Key Features Implemented:**
+- **AutomaticMonitoringService**: Singleton service that performs batch checks every 3 minutes
+- **Fast Batch Checking**: Uses `/readings/avg/latest/batch` endpoint with 3-second timeout
+- **Fallback System**: Falls back to concurrent individual requests if batch API fails
+- **Smart Caching**: Caches silo data with freshness tracking (5-minute fresh window)
+- **On-Demand Updates**: Individual silo updates when clicked, with immediate cache update
+- **Unified Interface**: Removed manual/auto test buttons, replaced with monitoring status indicator
+- **Real-time Status**: Shows monitoring status, cache stats, and last check time
+- **Performance Optimized**: All 195 silos checked in <3 seconds using concurrent requests
+
+**Technical Details:**
+- Monitoring interval: 3 minutes (as requested)
+- Batch timeout: 3 seconds (as requested)
+- Cache freshness: 5 minutes
+- Total silos: 195 (all groups)
+- API endpoints: Batch endpoint with fallback to individual endpoints
+- State management: Uses ChangeNotifier for real-time UI updates
 
 ### Implementation Details
 - Successfully restructured LiveReadingsInterface to vertical layout
@@ -125,3 +182,8 @@ Implement animated actions for grain level and silo sensors with API-based color
 - Weather station uses slave_id 21 for inside temp and 22 for outside temp
 - Real-time updates should refresh every 30 seconds for weather, 15-30 seconds for silo data
 - Temperature status: -127.0 = disconnected, <-50 or >60 = error, <0 or >50 = warning
+- **Automatic Monitoring**: 3-minute intervals with <3s batch checking is optimal for 195 silos
+- **Batch API**: Use `/readings/avg/latest/batch?silo_numbers=1,2,3...` for fast bulk operations
+- **Concurrent Requests**: When batch fails, use Future.wait() for concurrent individual requests
+- **Cache Strategy**: 5-minute freshness window prevents unnecessary API calls while maintaining accuracy
+- **On-demand Updates**: Individual silo clicks should trigger immediate updates for better UX
