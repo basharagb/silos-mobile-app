@@ -18,8 +18,11 @@ class AutomaticMonitoringService extends ChangeNotifier {
 
   // State
   Timer? _monitoringTimer;
+  Timer? _initialScanTimer;
   bool _isRunning = false;
   bool _isBatchChecking = false;
+  bool _isInitialScanning = false;
+  int _currentInitialScanIndex = 0;
   DateTime? _lastBatchCheck;
   Map<int, SiloSensorData> _cachedSiloData = {};
   Map<int, DateTime> _lastUpdated = {};
@@ -51,10 +54,20 @@ class AutomaticMonitoringService extends ChangeNotifier {
   // Getters
   bool get isRunning => _isRunning;
   bool get isBatchChecking => _isBatchChecking;
+  bool get isInitialScanning => _isInitialScanning;
+  int get currentInitialScanIndex => _currentInitialScanIndex;
   DateTime? get lastBatchCheck => _lastBatchCheck;
   Map<int, SiloSensorData> get cachedSiloData => Map.unmodifiable(_cachedSiloData);
   Map<int, DateTime> get lastUpdated => Map.unmodifiable(_lastUpdated);
   int get totalSilos => _allSilos.length;
+  
+  /// Get current silo being scanned in initial scan
+  int? get currentInitialScanSilo {
+    if (!_isInitialScanning || _currentInitialScanIndex >= _allSilos.length) {
+      return null;
+    }
+    return _allSilos[_currentInitialScanIndex];
+  }
   
   /// Start automatic monitoring with 3-minute intervals
   void startMonitoring() {
@@ -63,12 +76,14 @@ class AutomaticMonitoringService extends ChangeNotifier {
     _isRunning = true;
     debugPrint('🔄 [AUTO MONITOR] Starting automatic monitoring (3-minute intervals)');
     
-    // Perform initial batch check immediately
-    _performBatchCheck();
+    // Start initial scan first (1 second per silo)
+    _startInitialScan();
     
-    // Set up periodic timer for 3-minute intervals
+    // Set up periodic timer for 3-minute intervals (starts after initial scan)
     _monitoringTimer = Timer.periodic(monitoringInterval, (timer) {
-      _performBatchCheck();
+      if (!_isInitialScanning) {
+        _performBatchCheck();
+      }
     });
     
     notifyListeners();
@@ -79,9 +94,12 @@ class AutomaticMonitoringService extends ChangeNotifier {
     if (!_isRunning) return;
     
     _monitoringTimer?.cancel();
+    _initialScanTimer?.cancel();
     _monitoringTimer = null;
+    _initialScanTimer = null;
     _isRunning = false;
     _isBatchChecking = false;
+    _isInitialScanning = false;
     
     debugPrint('🛑 [AUTO MONITOR] Stopped automatic monitoring');
     notifyListeners();
@@ -277,6 +295,75 @@ class AutomaticMonitoringService extends ChangeNotifier {
     _cachedSiloData.clear();
     _lastUpdated.clear();
     debugPrint('🗑️ [AUTO MONITOR] Cache cleared');
+    notifyListeners();
+  }
+  
+  /// Start initial scan (1 second per silo)
+  void _startInitialScan() {
+    if (_isInitialScanning) return;
+    
+    _isInitialScanning = true;
+    _currentInitialScanIndex = 0;
+    
+    debugPrint('🚀 [INITIAL SCAN] Starting initial scan for ${_allSilos.length} silos (1s per silo)');
+    notifyListeners();
+    
+    _scanNextSiloInInitialScan();
+  }
+  
+  /// Scan next silo in initial scan sequence
+  void _scanNextSiloInInitialScan() {
+    if (!_isInitialScanning || _currentInitialScanIndex >= _allSilos.length) {
+      _completeInitialScan();
+      return;
+    }
+    
+    final siloNumber = _allSilos[_currentInitialScanIndex];
+    debugPrint('🔍 [INITIAL SCAN] Scanning silo $siloNumber (${_currentInitialScanIndex + 1}/${_allSilos.length})');
+    
+    notifyListeners(); // Update UI to show current scanning silo
+    
+    // Scan the silo
+    _scanSiloInInitialScan(siloNumber).then((_) {
+      // Move to next silo after 1 second
+      _currentInitialScanIndex++;
+      
+      if (_isInitialScanning) {
+        _initialScanTimer = Timer(const Duration(seconds: 1), () {
+          _scanNextSiloInInitialScan();
+        });
+      }
+    });
+  }
+  
+  /// Scan individual silo during initial scan
+  Future<void> _scanSiloInInitialScan(int siloNumber) async {
+    try {
+      final data = await ApiService.getSiloSensorData(siloNumber);
+      
+      if (data != null) {
+        _cachedSiloData[siloNumber] = data;
+        _lastUpdated[siloNumber] = DateTime.now();
+        debugPrint('✅ [INITIAL SCAN] Silo $siloNumber scanned successfully');
+      } else {
+        debugPrint('❌ [INITIAL SCAN] Silo $siloNumber scan failed - no data');
+      }
+    } catch (e) {
+      debugPrint('❌ [INITIAL SCAN] Silo $siloNumber scan error: $e');
+    }
+  }
+  
+  /// Complete initial scan and start regular monitoring
+  void _completeInitialScan() {
+    _isInitialScanning = false;
+    _currentInitialScanIndex = 0;
+    _initialScanTimer?.cancel();
+    _initialScanTimer = null;
+    
+    final scannedCount = _cachedSiloData.length;
+    debugPrint('🏁 [INITIAL SCAN] Initial scan completed! Scanned $scannedCount/${_allSilos.length} silos');
+    debugPrint('🔄 [AUTO MONITOR] Regular 3-minute monitoring will now begin');
+    
     notifyListeners();
   }
   

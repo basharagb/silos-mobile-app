@@ -112,8 +112,23 @@ Implement an automatic monitoring system that:
 ### ✅ TASK COMPLETED SUCCESSFULLY
 
 **Branch:** `feature/automatic-monitoring-3min`
-**Commit:** 653c7da - "feat: Implement automatic monitoring system with 3-minute intervals"
+**Latest Commit:** 6783427 - "feat: Update silo display logic for wheat/API colors and scanning indicators"
 **PR:** https://github.com/basharagb/silos-mobile-app/pull/new/feature/automatic-monitoring-3min
+
+### ✅ FINAL SILO DISPLAY LOGIC IMPLEMENTED
+
+**Silo Color Logic (As Requested):**
+- **Unscanned Silos**: Wheat color (yellowish like wheat grain) with silo number
+- **Scanned Silos**: API color with silo number
+- **Scanning State**: Blue color with circular progress indicator and pulsing animation
+- **On-Click**: Calls API, updates values, shows scanning process with visual indicators
+
+**Visual Feedback:**
+- Circular progress ring during scanning
+- Pulsing animation for scanning silos
+- Smart text contrast (auto-adjusts based on background color)
+- Status indicator dots for different states
+- Smooth color transitions
 
 ### ✅ IMPLEMENTATION COMPLETED
 

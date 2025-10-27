@@ -118,7 +118,17 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
   
   /// Check if silo is currently being scanned
   bool isSiloScanning(int num) {
-    return _scanningSilos.contains(num);
+    // Check if it's being scanned manually
+    if (_scanningSilos.contains(num)) {
+      return true;
+    }
+    
+    // Check if it's being scanned in initial scan
+    if (_monitoringService.isInitialScanning) {
+      return _monitoringService.currentInitialScanSilo == num;
+    }
+    
+    return false;
   }
 
   bool isSquare(int num) {
@@ -340,6 +350,9 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
     final stats = _monitoringService.getMonitoringStats();
     final isRunning = _monitoringService.isRunning;
     final isBatchChecking = _monitoringService.isBatchChecking;
+    final isInitialScanning = _monitoringService.isInitialScanning;
+    final currentInitialScanIndex = _monitoringService.currentInitialScanIndex;
+    final currentInitialScanSilo = _monitoringService.currentInitialScanSilo;
     final lastCheck = _monitoringService.lastBatchCheck;
     
     return Container(
@@ -366,27 +379,27 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isRunning ? Icons.autorenew : Icons.pause_circle_outline,
-                color: isRunning ? Colors.green : Colors.grey,
+                isInitialScanning ? Icons.scanner : (isRunning ? Icons.autorenew : Icons.pause_circle_outline),
+                color: isInitialScanning ? Colors.blue : (isRunning ? Colors.green : Colors.grey),
                 size: 20.w,
               ),
               SizedBox(width: 8.w),
               Text(
-                'Automatic Monitoring',
+                isInitialScanning ? 'Initial Scan' : 'Automatic Monitoring',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
-                  color: isRunning ? Colors.green.shade800 : Colors.grey.shade600,
+                  color: isInitialScanning ? Colors.blue.shade800 : (isRunning ? Colors.green.shade800 : Colors.grey.shade600),
                 ),
               ),
-              if (isBatchChecking) ...[
+              if (isBatchChecking || isInitialScanning) ...[
                 SizedBox(width: 8.w),
                 SizedBox(
                   width: 16.w,
                   height: 16.w,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                    valueColor: AlwaysStoppedAnimation<Color>(isInitialScanning ? Colors.blue : Colors.green),
                   ),
                 ),
               ],
@@ -399,24 +412,45 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatusItem(
-                'Interval',
-                '3 min',
-                Icons.timer,
-                Colors.blue,
-              ),
-              _buildStatusItem(
-                'Cached',
-                '${stats['cachedSilos']}/${stats['totalSilos']}',
-                Icons.storage,
-                Colors.orange,
-              ),
-              _buildStatusItem(
-                'Fresh',
-                '${stats['freshSilos']}',
-                Icons.refresh,
-                Colors.green,
-              ),
+              if (isInitialScanning) ...[
+                _buildStatusItem(
+                  'Progress',
+                  '${currentInitialScanIndex}/${stats['totalSilos']}',
+                  Icons.trending_up,
+                  Colors.blue,
+                ),
+                _buildStatusItem(
+                  'Current',
+                  currentInitialScanSilo?.toString() ?? '-',
+                  Icons.gps_fixed,
+                  Colors.orange,
+                ),
+                _buildStatusItem(
+                  'Speed',
+                  '1s/silo',
+                  Icons.speed,
+                  Colors.green,
+                ),
+              ] else ...[
+                _buildStatusItem(
+                  'Interval',
+                  '3 min',
+                  Icons.timer,
+                  Colors.blue,
+                ),
+                _buildStatusItem(
+                  'Cached',
+                  '${stats['cachedSilos']}/${stats['totalSilos']}',
+                  Icons.storage,
+                  Colors.orange,
+                ),
+                _buildStatusItem(
+                  'Fresh',
+                  '${stats['freshSilos']}',
+                  Icons.refresh,
+                  Colors.green,
+                ),
+              ],
             ],
           ),
           
@@ -431,7 +465,24 @@ class _LiveReadingsInterfaceState extends State<LiveReadingsInterface> {
             ),
           ],
           
-          if (isBatchChecking) ...[
+          if (isInitialScanning) ...[
+            SizedBox(height: 8.h),
+            // Progress bar for initial scan
+            LinearProgressIndicator(
+              value: currentInitialScanIndex / stats['totalSilos'],
+              backgroundColor: Colors.blue.shade100,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Scanning silo ${currentInitialScanSilo ?? '...'} (${currentInitialScanIndex}/${stats['totalSilos']})',
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: Colors.blue.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ] else if (isBatchChecking) ...[
             SizedBox(height: 8.h),
             Text(
               'Checking all silos...',
